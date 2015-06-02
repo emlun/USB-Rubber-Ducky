@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+sourceSets {
+  main {
+    java {
+      srcDir 'src'
+      exclude 'Encoder_GUI.java'
+    }
+    resources { srcDir 'resources' }
+  }
+}
+
+jar {
+  manifest {
+    from 'resources/META-INF/MANIFEST.MF'
+  }
+}
