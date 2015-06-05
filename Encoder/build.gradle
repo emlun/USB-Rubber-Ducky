@@ -41,4 +41,15 @@ jar {
   }
 }
 
+task neoJar(type: Jar, dependsOn: neoClasses) {
+  from sourceSets.neo.output
+
+  configurations.neoRuntime.files.each {
+    from zipTree(it)
+  }
+
+  archiveName = 'new-encoder.jar'
+  manifest.from 'src/neo/resources/META-INF/MANIFEST.MF'
+}
+
 apply from: 'test.gradle'
