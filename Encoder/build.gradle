@@ -19,3 +19,21 @@ jar {
     from 'resources/META-INF/MANIFEST.MF'
   }
 }
+
+task makeOutputDumps
+fileTree('test/resources/') {
+  include '*.ducky'
+}.visit { f ->
+  if(!f.isDirectory()) {
+    def t = task("makeOutputDump-${f.name}", type: JavaExec) {
+      def outputFile = file("test/outputs/${f.name.replace('.ducky', '.bin')}")
+      outputFile.parentFile.mkdirs()
+
+      classpath sourceSets.main.runtimeClasspath
+      main 'Encoder'
+      args '-i', f.file.path
+      args '-o', outputFile.path
+    }
+    makeOutputDumps.dependsOn t
+  }
+}
