@@ -15,6 +15,7 @@ sourceSets {
 }
 
 jar {
+  archiveName = 'encoder.jar'
   manifest {
     from 'resources/META-INF/MANIFEST.MF'
   }
