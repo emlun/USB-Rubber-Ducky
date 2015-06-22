@@ -38,7 +38,7 @@ Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
 task makeOutputDumps
 
 task testOutputs
-test.dependsOn testOutputs
+check.dependsOn testOutputs
 
 fileTree('src/test/resources/') {
   include '*.ducky'
