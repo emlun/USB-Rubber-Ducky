@@ -10,12 +10,37 @@ Task makeEncodeTask(File inputFile, File outputFile) {
   }
 }
 
+Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
+  def testOutputFile = file("${buildDir}/tmp/inject.bin")
+
+  def testTask = task("checkOutput-${inputFile.name}") {
+    inputs.files testOutputFile, expectedOutputFile
+  } << {
+    byte[] expectedOutput = expectedOutputFile.bytes
+    byte[] actualOutput = testOutputFile.bytes
+
+    assert actualOutput.length == expectedOutput.length,
+      "Wrong file length (expected = ${expectedOutput.length}, actual = ${actualOutput.length}"
+
+    for(int i = 0; i < expectedOutput.length; ++i) {
+      assert actualOutput[i] == expectedOutput[i],
+        "Wrong output byte at index $i (expected = ${expectedOutput[i]}, actual = ${actualOutput[i]})"
+    }
+  }
+  testTask.dependsOn makeEncodeTask(inputFile, testOutputFile)
+  return testTask
+}
+
 task makeOutputDumps
+task testOutputs
+
 fileTree('test/resources/') {
   include '*.ducky'
 }.visit { f ->
   if(!f.isDirectory()) {
     def outputFile = file("test/outputs/${f.name.replace('.ducky', '')}.bin")
     makeOutputDumps.dependsOn makeEncodeTask(f.file, outputFile)
+
+    testOutputs.dependsOn makeCheckOutputTask(f.file, outputFile)
   }
 }
