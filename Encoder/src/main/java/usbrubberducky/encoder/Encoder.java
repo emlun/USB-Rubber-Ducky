@@ -10,6 +10,8 @@
 // Modified:     4/18/2013 midnitesnake "added more user feedback"
 // Modified:	 5/2/2013 midnitesnake "added skip over empty lines"
 // Modified:     1/12/2014 Benthejunebug "added ALT-TAB"
+// Modified:     2015-06-22 Emil Lundberg "Refactorized for easier testing"
+package usbrubberducky.encoder;
 
 import java.io.DataInputStream;
 import java.io.File;
@@ -137,9 +139,8 @@ public class Encoder {
         
         private static void loadProperties (String lang){
                 InputStream in;
-                ClassLoader loader = ClassLoader.getSystemClassLoader ();
                 try {
-                        in = loader.getResourceAsStream("keyboard.properties");
+                        in = Encoder.class.getResourceAsStream("keyboard.properties");
                         if(in != null){
                                 keyboardProps.load(in);
                                 in.close();
@@ -153,7 +154,7 @@ public class Encoder {
                 }
                         
                 try {
-                        in = loader.getResourceAsStream(lang + ".properties");
+                        in = Encoder.class.getResourceAsStream(lang + ".properties");
                         if(in != null){
                                 layoutProps.load(in);
                                 in.close();

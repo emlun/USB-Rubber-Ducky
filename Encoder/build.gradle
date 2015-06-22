@@ -4,20 +4,12 @@ task wrapper(type: Wrapper) {
   gradleVersion = '2.4'
 }
 
-sourceSets {
-  main {
-    java {
-      srcDir 'src'
-      exclude 'Encoder_GUI.java'
-    }
-    resources { srcDir 'resources' }
-  }
-}
+sourceSets.main.java.exclude 'usbrubberducky/encoder/Encoder_GUI.java'
 
 jar {
   archiveName = 'encoder.jar'
   manifest {
-    from 'resources/META-INF/MANIFEST.MF'
+    from 'src/main/resources/META-INF/MANIFEST.MF'
   }
 }
 

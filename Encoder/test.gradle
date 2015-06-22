@@ -40,11 +40,11 @@ task makeOutputDumps
 task testOutputs
 test.dependsOn testOutputs
 
-fileTree('test/resources/') {
+fileTree('src/test/resources/') {
   include '*.ducky'
 }.visit { f ->
   if(!f.isDirectory()) {
-    def outputFile = file("test/outputs/${f.name.replace('.ducky', '')}.bin")
+    def outputFile = file("src/test/outputs/${f.name.replace('.ducky', '')}.bin")
     makeOutputDumps.dependsOn makeEncodeTask(f.file, outputFile)
 
     testOutputs.dependsOn makeCheckOutputTask(f.file, outputFile)
