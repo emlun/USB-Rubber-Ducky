@@ -17,7 +17,8 @@ Task makeEncodeTask(File inputFile, File outputFile) {
 Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
   def testOutputFile = file("${buildDir}/tmp/${inputFile.name.replace('.ducky', '')}.bin")
 
-  def testTask = task("checkOutput_${inputFile.name}") {
+  def encodeTask = makeEncodeTask(inputFile, testOutputFile)
+  return task("checkOutput_${inputFile.name}", dependsOn: encodeTask) {
     inputs.files testOutputFile, expectedOutputFile
   } << {
     byte[] expectedOutput = expectedOutputFile.bytes
@@ -31,8 +32,6 @@ Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
         "Wrong output byte at index $i (expected = ${expectedOutput[i]}, actual = ${actualOutput[i]})"
     }
   }
-  testTask.dependsOn makeEncodeTask(inputFile, testOutputFile)
-  return testTask
 }
 
 task makeOutputDumps
