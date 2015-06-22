@@ -37,6 +37,10 @@ public class Encoder {
         private static Boolean debug=false;
     
         public static void main(String[] args) {
+                run(args);
+        }
+
+        public static void run(String[] args) {
                 String helpStr = "Hak5 Duck Encoder "+version+"\n\n"
                         + "Usage: duckencode -i [file ..]\t\t\tencode specified file\n"
                         + "   or: duckencode -i [file ..] -o [file ..]\tencode to specified file\n\n"
