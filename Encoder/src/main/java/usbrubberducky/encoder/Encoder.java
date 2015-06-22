@@ -30,17 +30,17 @@ import java.util.Properties;
 
 public class Encoder {
         /* contains the keyboard configuration */
-        private static Properties keyboardProps = new Properties();
+        private Properties keyboardProps = new Properties();
         /* contains the language layout */
-        private static Properties layoutProps = new Properties();
+        private Properties layoutProps = new Properties();
         private static String version = "2.6.3";
-        private static Boolean debug=false;
+        private Boolean debug=false;
     
         public static void main(String[] args) {
-                run(args);
+                new Encoder().run(args);
         }
 
-        public static void run(String[] args) {
+        public void run(String[] args) {
                 String helpStr = "Hak5 Duck Encoder "+version+"\n\n"
                         + "Usage: duckencode -i [file ..]\t\t\tencode specified file\n"
                         + "   or: duckencode -i [file ..] -o [file ..]\tencode to specified file\n\n"
@@ -141,7 +141,7 @@ public class Encoder {
             
         }
         
-        private static void loadProperties (String lang){
+        private void loadProperties (String lang){
                 InputStream in;
                 try {
                         in = Encoder.class.getResourceAsStream("keyboard.properties");
@@ -178,7 +178,7 @@ public class Encoder {
                 }
 
         }
-        private static List<Byte> encode(String inStr) {
+        private List<Byte> encode(String inStr) {
 
                 inStr = inStr.replaceAll("\\r", ""); // CRLF Fix
                 String[] instructions = inStr.split("\n");
@@ -376,7 +376,7 @@ public class Encoder {
                 return file;
         }
 
-        private static void encodeToFile(String inStr, String fileDest) {
+        private void encodeToFile(String inStr, String fileDest) {
                 List<Byte> file = encode(inStr);
 
                 // Write byte array to file
@@ -405,7 +405,7 @@ public class Encoder {
                 }
         }
         
-        private static byte[] charToBytes (char c){
+        private byte[] charToBytes (char c){
                 return codeToBytes(charToCode(c));
         }
         private static String charToCode (char c){
@@ -420,7 +420,7 @@ public class Encoder {
                 return code;
         }
         
-        private static byte[] codeToBytes (String str){
+        private byte[] codeToBytes (String str){
                 if(layoutProps.getProperty(str) != null){
                         String keys[] = layoutProps.getProperty(str).split(",");
                         byte[] byteTab = new byte[keys.length];
@@ -451,7 +451,7 @@ public class Encoder {
                 }
         }
         
-        private static byte strInstrToByte(String instruction){
+        private byte strInstrToByte(String instruction){
                 instruction = instruction.trim();
                 if(keyboardProps.getProperty("KEY_"+instruction)!=null)
                         return strToByte(keyboardProps.getProperty("KEY_"+instruction));
