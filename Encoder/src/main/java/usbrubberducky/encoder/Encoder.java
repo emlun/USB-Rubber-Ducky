@@ -35,12 +35,19 @@ public class Encoder {
         private Properties layoutProps = new Properties();
         private static String version = "2.6.3";
         private Boolean debug=false;
-    
+
+        private String inputFile = null;
+        private String outputFile = null;
+        private String layoutFile = null;
+        private String scriptStr = null;
+
         public static void main(String[] args) {
-                new Encoder().run(args);
+                Encoder enc = new Encoder();
+                enc.setup(args);
+                enc.run();
         }
 
-        public void run(String[] args) {
+        public void setup(String[] args) {
                 String helpStr = "Hak5 Duck Encoder "+version+"\n\n"
                         + "Usage: duckencode -i [file ..]\t\t\tencode specified file\n"
                         + "   or: duckencode -i [file ..] -o [file ..]\tencode to specified file\n\n"
@@ -62,10 +69,6 @@ public class Encoder {
                         + "   STRING [any character of your layout]\n"
                         + "   REPEAT [Number] (Repeat last instruction N times)\n"
                         + "   [key name] (anything in the keyboard.properties)";                        
-
-        String inputFile = null;
-        String outputFile = null;
-        String layoutFile = null;
 
         if (args.length == 0) {
                 System.out.println(helpStr);
@@ -98,7 +101,6 @@ public class Encoder {
         System.out.println("Hak5 Duck Encoder "+version+"\n");
         
         if (inputFile != null) {
-                String scriptStr = null;
 
                 if (inputFile.contains(".rtf")) {
                         try {
@@ -134,11 +136,11 @@ public class Encoder {
                         }
                 }
                 loadProperties((layoutFile == null) ? "us" : layoutFile);
-                
-                encodeToFile(scriptStr, (outputFile == null) ? "inject.bin"
-                                : outputFile);
                 }
-            
+        }
+
+        public void run() {
+                encodeToFile(scriptStr, (outputFile == null) ? "inject.bin" : outputFile);
         }
         
         private void loadProperties (String lang){
