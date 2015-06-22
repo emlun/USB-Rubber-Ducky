@@ -20,6 +20,7 @@ Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
   def encodeTask = makeEncodeTask(inputFile, testOutputFile)
   return task("checkOutput_${inputFile.name}", dependsOn: encodeTask) {
     inputs.files testOutputFile, expectedOutputFile
+    outputs.upToDateWhen { !encodeTask.didWork }
   } << {
     byte[] expectedOutput = expectedOutputFile.bytes
     byte[] actualOutput = testOutputFile.bytes
