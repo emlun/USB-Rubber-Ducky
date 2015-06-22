@@ -1,0 +1,52 @@
+Task makeEncodeTask(File inputFile, File outputFile) {
+  task("encode_${inputFile}_As_${outputFile}", type: JavaExec) {
+    inputs.dir sourceSets.main.output
+    inputs.file inputFile
+    outputs.file outputFile
+
+    classpath sourceSets.main.runtimeClasspath
+    main 'Encoder'
+    args '-i', inputFile.path
+    args '-o', outputFile.path
+    standardOutput = new ByteArrayOutputStream()
+  } doFirst {
+    outputFile.parentFile.mkdirs()
+  }
+}
+
+Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
+  def testOutputFile = file("${buildDir}/tmp/${inputFile.name.replace('.ducky', '')}.bin")
+
+  def encodeTask = makeEncodeTask(inputFile, testOutputFile)
+  return task("checkOutput_${inputFile.name}", dependsOn: encodeTask) {
+    inputs.files testOutputFile, expectedOutputFile
+    outputs.upToDateWhen { !encodeTask.didWork }
+  } << {
+    byte[] expectedOutput = expectedOutputFile.bytes
+    byte[] actualOutput = testOutputFile.bytes
+
+    assert actualOutput.length == expectedOutput.length,
+      "Wrong file length (expected = ${expectedOutput.length}, actual = ${actualOutput.length}"
+
+    for(int i = 0; i < expectedOutput.length; ++i) {
+      assert actualOutput[i] == expectedOutput[i],
+        "Wrong output byte at index $i (expected = ${expectedOutput[i]}, actual = ${actualOutput[i]})"
+    }
+  }
+}
+
+task makeOutputDumps
+
+task testOutputs
+test.dependsOn testOutputs
+
+fileTree('test/resources/') {
+  include '*.ducky'
+}.visit { f ->
+  if(!f.isDirectory()) {
+    def outputFile = file("test/outputs/${f.name.replace('.ducky', '')}.bin")
+    makeOutputDumps.dependsOn makeEncodeTask(f.file, outputFile)
+
+    testOutputs.dependsOn makeCheckOutputTask(f.file, outputFile)
+  }
+}

