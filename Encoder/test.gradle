@@ -1,5 +1,5 @@
 Task makeEncodeTask(File inputFile, File outputFile) {
-  task("encode-${inputFile.name}-As-${outputFile.name}", type: JavaExec) {
+  task("encode_${inputFile}_As_${outputFile}", type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main 'Encoder'
     args '-i', inputFile.path
@@ -11,9 +11,9 @@ Task makeEncodeTask(File inputFile, File outputFile) {
 }
 
 Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
-  def testOutputFile = file("${buildDir}/tmp/inject.bin")
+  def testOutputFile = file("${buildDir}/tmp/${inputFile.name.replace('.ducky', '')}.bin")
 
-  def testTask = task("checkOutput-${inputFile.name}") {
+  def testTask = task("checkOutput_${inputFile.name}") {
     inputs.files testOutputFile, expectedOutputFile
   } << {
     byte[] expectedOutput = expectedOutputFile.bytes
