@@ -1,0 +1,20 @@
+Task makeEncodeTask(File inputFile, File outputFile) {
+  task("encode-${inputFile.name}-As-${outputFile.name}", type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main 'Encoder'
+    args '-i', inputFile.path
+    args '-o', outputFile.path
+  } doFirst {
+    outputFile.parentFile.mkdirs()
+  }
+}
+
+task makeOutputDumps
+fileTree('test/resources/') {
+  include '*.ducky'
+}.visit { f ->
+  if(!f.isDirectory()) {
+    def outputFile = file("test/outputs/${f.name.replace('.ducky', '')}.bin")
+    makeOutputDumps.dependsOn makeEncodeTask(f.file, outputFile)
+  }
+}
