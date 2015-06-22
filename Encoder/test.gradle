@@ -4,6 +4,7 @@ Task makeEncodeTask(File inputFile, File outputFile) {
     main 'Encoder'
     args '-i', inputFile.path
     args '-o', outputFile.path
+    standardOutput = new ByteArrayOutputStream()
   } doFirst {
     outputFile.parentFile.mkdirs()
   }
