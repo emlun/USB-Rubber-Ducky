@@ -17,6 +17,11 @@
 package usbrubberducky
 package encoder
 
+import scala.io.Source
+
+import util.Context
+import lang.{Lexer,Parser}
+
 object Main extends App {
 
   private case class Settings(
@@ -33,5 +38,21 @@ object Main extends App {
       case head :: tail            => Left("Unknown command line option or too few option arguments: " + head)
     }
 
-  println(processArguments(args.toList, Settings()))
+  processArguments(args.toList, Settings()) match {
+    case Left(settings) => {
+      println("Invalid commandline arguments.")
+      println(settings)
+    }
+    case Right(settings) => {
+      println("Sorry, this functionality is not yet implemented!")
+      settings.infile map { fileName =>
+        val bytes = (Lexer andThen Parser andThen NewEncoder).run(new Context())(Source fromFile fileName)
+        println("Bytes: " + bytes)
+      } orElse {
+        println("No input file specified.")
+        None
+      }
+    }
+  }
+
 }
