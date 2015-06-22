@@ -1,11 +1,11 @@
 Task makeEncodeTask(File inputFile, File outputFile) {
-  task("encode_${inputFile}_As_${outputFile}", type: JavaExec) {
-    inputs.dir sourceSets.main.output
+  task("encode_${inputFile}_As_${outputFile}", type: JavaExec, dependsOn: jar) {
+    inputs.file jar.archivePath
     inputs.file inputFile
     outputs.file outputFile
 
-    classpath sourceSets.main.runtimeClasspath
-    main 'Encoder'
+    main '-jar'
+    args jar.archivePath
     args '-i', inputFile.path
     args '-o', outputFile.path
     standardOutput = new ByteArrayOutputStream()
