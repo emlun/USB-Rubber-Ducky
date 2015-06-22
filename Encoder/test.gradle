@@ -1,5 +1,9 @@
 Task makeEncodeTask(File inputFile, File outputFile) {
   task("encode_${inputFile}_As_${outputFile}", type: JavaExec) {
+    inputs.dir sourceSets.main.output
+    inputs.file inputFile
+    outputs.file outputFile
+
     classpath sourceSets.main.runtimeClasspath
     main 'Encoder'
     args '-i', inputFile.path
