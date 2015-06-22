@@ -34,20 +34,20 @@ public class Encoder {
         /* contains the language layout */
         private Properties layoutProps = new Properties();
         private static String version = "2.6.3";
-        private Boolean debug=false;
+        private static Boolean debug=false;
 
         private String inputFile = null;
         private String outputFile = null;
         private String layoutFile = null;
         private String scriptStr = null;
 
-        public static void main(String[] args) {
-                Encoder enc = new Encoder();
-                enc.setup(args);
-                enc.run();
+        public Encoder(String inputFile, String outputFile, String layoutFile) {
+                this.inputFile = inputFile;
+                this.outputFile = outputFile;
+                this.layoutFile = layoutFile;
         }
 
-        public void setup(String[] args) {
+        public static void main(String[] args) {
                 String helpStr = "Hak5 Duck Encoder "+version+"\n\n"
                         + "Usage: duckencode -i [file ..]\t\t\tencode specified file\n"
                         + "   or: duckencode -i [file ..] -o [file ..]\tencode to specified file\n\n"
@@ -75,6 +75,10 @@ public class Encoder {
                 System.exit(0);
         }
 
+        String inputFile = null;
+        String outputFile = null;
+        String layoutFile = null;
+
         for (int i = 0; i < args.length; i++) {
                 if (args[i].equals("--gui") || args[i].equals("-g")) {
                         System.out.println("Launch GUI");
@@ -99,9 +103,16 @@ public class Encoder {
         }
             
         System.out.println("Hak5 Duck Encoder "+version+"\n");
+
+
+                Encoder enc = new Encoder(inputFile, outputFile, layoutFile);
+                enc.setup();
+                enc.run();
+        }
+
+        public void setup() {
         
         if (inputFile != null) {
-
                 if (inputFile.contains(".rtf")) {
                         try {
                                 FileInputStream stream = new FileInputStream(inputFile);
