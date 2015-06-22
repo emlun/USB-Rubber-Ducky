@@ -173,7 +173,7 @@ public class Encoder {
                 }
 
         }
-        private static void encodeToFile(String inStr, String fileDest) {
+        private static List<Byte> encode(String inStr) {
 
                 inStr = inStr.replaceAll("\\r", ""); // CRLF Fix
                 String[] instructions = inStr.split("\n");
@@ -368,6 +368,11 @@ public class Encoder {
                                 e.printStackTrace();
                         }
                 }
+                return file;
+        }
+
+        private static void encodeToFile(String inStr, String fileDest) {
+                List<Byte> file = encode(inStr);
 
                 // Write byte array to file
                 byte[] data = new byte[file.size()];
