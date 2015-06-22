@@ -1,7 +1,5 @@
 apply plugin: 'java'
 
-apply from: 'test.gradle'
-
 task wrapper(type: Wrapper) {
   gradleVersion = '2.4'
 }
@@ -21,3 +19,5 @@ jar {
     from 'resources/META-INF/MANIFEST.MF'
   }
 }
+
+apply from: 'test.gradle'
