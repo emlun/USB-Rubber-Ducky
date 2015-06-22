@@ -1,10 +1,28 @@
 apply plugin: 'java'
+apply plugin: 'scala'
 
 task wrapper(type: Wrapper) {
   gradleVersion = '2.4'
 }
 
-sourceSets.main.java.exclude 'usbrubberducky/encoder/Encoder_GUI.java'
+sourceSets {
+  main.java.exclude 'usbrubberducky/encoder/Encoder_GUI.java'
+  neo
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+  neoCompile(
+    'org.scala-lang:scala-library:2.11+',
+  )
+}
+
+// Use fast, incremental scala compiler
+tasks.withType(ScalaCompile) {
+  scalaCompileOptions.useAnt = false
+  scalaCompileOptions.additionalParameters = ['-feature']
+}
 
 jar {
   archiveName = 'encoder.jar'
