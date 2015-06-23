@@ -15,6 +15,10 @@ sourceSets {
 
 repositories { mavenCentral() }
 
+configurations {
+  testRuntime { extendsFrom neoRuntime }
+}
+
 dependencies {
   neoCompile(
     'org.scala-lang:scala-library:2.11+',
