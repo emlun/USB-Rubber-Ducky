@@ -191,7 +191,11 @@ public class Encoder {
                 }
 
         }
-        private List<Byte> encode(String inStr) {
+        public List<Byte> encode() {
+                if(scriptStr == null) {
+                        throw new IllegalStateException("Call setup first.");
+                }
+                String inStr = scriptStr;
 
                 inStr = inStr.replaceAll("\\r", ""); // CRLF Fix
                 String[] instructions = inStr.split("\n");
@@ -390,7 +394,7 @@ public class Encoder {
         }
 
         private void encodeToFile(String inStr, String fileDest) {
-                List<Byte> file = encode(inStr);
+                List<Byte> file = encode();
 
                 // Write byte array to file
                 byte[] data = new byte[file.size()];
