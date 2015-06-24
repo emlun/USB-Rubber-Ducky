@@ -30,12 +30,23 @@ import java.util.Properties;
 
 public class Encoder {
         /* contains the keyboard configuration */
-        private static Properties keyboardProps = new Properties();
+        private Properties keyboardProps = new Properties();
         /* contains the language layout */
-        private static Properties layoutProps = new Properties();
+        private Properties layoutProps = new Properties();
         private static String version = "2.6.3";
         private static Boolean debug=false;
-    
+
+        private String inputFile = null;
+        private String outputFile = null;
+        private String layoutFile = null;
+        private String scriptStr = null;
+
+        public Encoder(String inputFile, String outputFile, String layoutFile) {
+                this.inputFile = inputFile;
+                this.outputFile = outputFile;
+                this.layoutFile = layoutFile;
+        }
+
         public static void main(String[] args) {
                 String helpStr = "Hak5 Duck Encoder "+version+"\n\n"
                         + "Usage: duckencode -i [file ..]\t\t\tencode specified file\n"
@@ -59,14 +70,14 @@ public class Encoder {
                         + "   REPEAT [Number] (Repeat last instruction N times)\n"
                         + "   [key name] (anything in the keyboard.properties)";                        
 
-        String inputFile = null;
-        String outputFile = null;
-        String layoutFile = null;
-
         if (args.length == 0) {
                 System.out.println(helpStr);
                 System.exit(0);
         }
+
+        String inputFile = null;
+        String outputFile = null;
+        String layoutFile = null;
 
         for (int i = 0; i < args.length; i++) {
                 if (args[i].equals("--gui") || args[i].equals("-g")) {
@@ -92,10 +103,16 @@ public class Encoder {
         }
             
         System.out.println("Hak5 Duck Encoder "+version+"\n");
+
+
+                Encoder enc = new Encoder(inputFile, outputFile, layoutFile);
+                enc.setup();
+                enc.run();
+        }
+
+        public void setup() {
         
         if (inputFile != null) {
-                String scriptStr = null;
-
                 if (inputFile.contains(".rtf")) {
                         try {
                                 FileInputStream stream = new FileInputStream(inputFile);
@@ -130,14 +147,14 @@ public class Encoder {
                         }
                 }
                 loadProperties((layoutFile == null) ? "us" : layoutFile);
-                
-                encodeToFile(scriptStr, (outputFile == null) ? "inject.bin"
-                                : outputFile);
                 }
-            
+        }
+
+        public void run() {
+                encodeToFile(scriptStr, (outputFile == null) ? "inject.bin" : outputFile);
         }
         
-        private static void loadProperties (String lang){
+        private void loadProperties (String lang){
                 InputStream in;
                 try {
                         in = Encoder.class.getResourceAsStream("keyboard.properties");
@@ -174,7 +191,11 @@ public class Encoder {
                 }
 
         }
-        private static List<Byte> encode(String inStr) {
+        public List<Byte> encode() {
+                if(scriptStr == null) {
+                        throw new IllegalStateException("Call setup first.");
+                }
+                String inStr = scriptStr;
 
                 inStr = inStr.replaceAll("\\r", ""); // CRLF Fix
                 String[] instructions = inStr.split("\n");
@@ -372,8 +393,8 @@ public class Encoder {
                 return file;
         }
 
-        private static void encodeToFile(String inStr, String fileDest) {
-                List<Byte> file = encode(inStr);
+        private void encodeToFile(String inStr, String fileDest) {
+                List<Byte> file = encode();
 
                 // Write byte array to file
                 byte[] data = new byte[file.size()];
@@ -401,7 +422,7 @@ public class Encoder {
                 }
         }
         
-        private static byte[] charToBytes (char c){
+        private byte[] charToBytes (char c){
                 return codeToBytes(charToCode(c));
         }
         private static String charToCode (char c){
@@ -416,7 +437,7 @@ public class Encoder {
                 return code;
         }
         
-        private static byte[] codeToBytes (String str){
+        private byte[] codeToBytes (String str){
                 if(layoutProps.getProperty(str) != null){
                         String keys[] = layoutProps.getProperty(str).split(",");
                         byte[] byteTab = new byte[keys.length];
@@ -447,7 +468,7 @@ public class Encoder {
                 }
         }
         
-        private static byte strInstrToByte(String instruction){
+        private byte strInstrToByte(String instruction){
                 instruction = instruction.trim();
                 if(keyboardProps.getProperty("KEY_"+instruction)!=null)
                         return strToByte(keyboardProps.getProperty("KEY_"+instruction));
