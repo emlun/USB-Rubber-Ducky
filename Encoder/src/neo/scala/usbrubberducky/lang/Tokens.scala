@@ -17,9 +17,11 @@
 package usbrubberducky
 package lang
 
+import util.Position
+
 object Tokens {
 
-  sealed class Token(kind: TokenKind)
+  sealed class Token(val kind: TokenKind, val pos: Position)
 
   sealed trait TokenKind {
     def startsWith(prefix: String): Boolean
@@ -59,8 +61,8 @@ object Tokens {
     override def matches(value: String)     = this startsWith value
   }
 
-  case class KEYNAME(value: String) extends Token(KEYNAMEKIND)
-  case class INTLIT(value: Int)     extends Token(INTLITKIND)
-  case class STRLIT(value: String)  extends Token(STRLITKIND)
+  case class KEYNAME(value: String, override val pos: Position) extends Token(KEYNAMEKIND, pos)
+  case class INTLIT(value: Int, override val pos: Position)     extends Token(INTLITKIND, pos)
+  case class STRLIT(value: String, override val pos: Position)  extends Token(STRLITKIND, pos)
 
 }

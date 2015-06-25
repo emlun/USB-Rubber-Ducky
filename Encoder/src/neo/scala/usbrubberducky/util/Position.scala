@@ -15,18 +15,17 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package usbrubberducky
-package lang
+package util
 
-import scala.io.Source
+import scala.util.parsing.input.OffsetPosition
 
-import util.Context
-import util.Pipeline
-import util.Position
+/**
+ * @param line 1-indexed line number
+ * @param column 1-indexed column number
+ * @param lineContent the content of the line this position is in
+ */
+case class Position(line: Int, column: Int, lineContent: String) {
+  private lazy val _pos = OffsetPosition(lineContent, column - 1)
 
-import Tokens._
-
-object Lexer extends Pipeline[Source, Iterator[Token]] {
-
-  override def run(ctx: Context)(source: Source) = Nil.toIterator
-
+  def longString = _pos.longString
 }
