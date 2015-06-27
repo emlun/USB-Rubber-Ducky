@@ -54,7 +54,7 @@ object Tokens {
   }
   case object INTLITKIND extends TokenKind {
     override def startsWith(prefix: String) = prefix.isEmpty || (prefix matches "0|[1-9][0-9]*")
-    override def matches(value: String)     = value.isEmpty  || (value  matches "0|[1-9][0-9]*")
+    override def matches(value: String)     = value matches "0|[1-9][0-9]*"
   }
   case object STRLITKIND extends TokenKind {
     override def startsWith(prefix: String) = !(prefix contains "\n")
