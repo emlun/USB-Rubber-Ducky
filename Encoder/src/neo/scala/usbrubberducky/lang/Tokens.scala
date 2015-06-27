@@ -21,7 +21,14 @@ import util.Position
 
 object Tokens {
 
-  sealed class Token(val kind: TokenKind, val pos: Position)
+  sealed class Token(val kind: TokenKind, val pos: Position) {
+    override def toString = kind.toString
+  }
+
+  sealed abstract class ValueToken[T](kind: TokenKind, pos: Position) extends Token(kind, pos) {
+    def value: T
+    override def toString = s"${getClass().getSimpleName}($value)"
+  }
 
   sealed trait TokenKind {
     def startsWith(prefix: String): Boolean
@@ -61,8 +68,13 @@ object Tokens {
     override def matches(value: String)     = this startsWith value
   }
 
-  case class KEYNAME(value: String, override val pos: Position) extends Token(KEYNAMEKIND, pos)
-  case class INTLIT(value: Int, override val pos: Position)     extends Token(INTLITKIND, pos)
-  case class STRLIT(value: String, override val pos: Position)  extends Token(STRLITKIND, pos)
+  case class KEYNAME(override val value: String, override val pos: Position)
+    extends ValueToken[String](KEYNAMEKIND, pos)
+
+  case class INTLIT(override val value: Int, override val pos: Position)
+    extends ValueToken[Int](INTLITKIND, pos)
+
+  case class STRLIT(override val value: String, override val pos: Position)
+    extends ValueToken[String](STRLITKIND, pos)
 
 }
