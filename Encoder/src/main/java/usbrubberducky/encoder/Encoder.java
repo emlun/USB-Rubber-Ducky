@@ -218,22 +218,8 @@ public class Encoder {
                                 
                                 if(i>0){
                                 		last_instruction=instructions[i-1].split(" ", 2);
-                                		last_instruction[0].trim();
-                                		if (last_instruction.length == 2) {
-                                        		last_instruction[1].trim();
-                                		}
                                 }else{
                                 		last_instruction=instructions[i].split(" ", 2);
-                                		last_instruction[0].trim();
-                                		if (last_instruction.length == 2) {
-                                        		last_instruction[1].trim();
-                                		}
-                                }
-
-                                instruction[0].trim();
-
-                                if (instruction.length == 2) {
-                                        instruction[1].trim();
                                 }
 
 								if (instruction[0].equals("REM")){
