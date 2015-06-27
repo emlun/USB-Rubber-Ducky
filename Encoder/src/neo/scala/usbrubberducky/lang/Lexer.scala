@@ -22,11 +22,71 @@ import scala.io.Source
 import util.Context
 import util.Pipeline
 import util.Position
+import util.Trimmed
 
 import Tokens._
 
 object Lexer extends Pipeline[Source, Iterator[Token]] {
 
-  override def run(ctx: Context)(source: Source) = Nil.toIterator
+  val COMMAND_TOKEN_KINDS: Set[TokenKind] = Set(
+    DEFAULTDELAY, DELAY, LINECOMMENT, REPEAT,
+    ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
+  )
+
+  def error(msg: String, pos: Position): Unit = {
+    println(s"${pos.line}:${pos.column}: $msg")
+    println(pos.longString)
+  }
+
+  override def run(ctx: Context)(source: Source) = {
+    (source.getLines.zipWithIndex flatMap { case (line: String, lineIndex: Int) =>
+      val lineNumber = lineIndex + 1
+      val linePos = Position(lineNumber, 1, line)
+      val newline = new Token(NEWLINE, linePos.copy(column = line.length))
+
+      line.split(" ", 2) match {
+        case Array(Trimmed(commandOrKeyName)) => {
+          val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
+
+          commandKindCandidates.toList match {
+            case List(LINECOMMENT) => Nil
+            case List(commandKind: KeywordKind) =>
+              new Token(commandKind, linePos) :: newline :: Nil
+            case Nil =>
+              if(KEYNAMEKIND matches commandOrKeyName) {
+                KEYNAME(commandOrKeyName, linePos) :: newline :: Nil
+              } else {
+                error("Only one word given, but is not a command or key name.", linePos)
+                new Token(BAD, linePos) :: Nil
+              }
+          }
+        }
+        case Array(Trimmed(command), tail: String) => {
+          val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
+
+          val argumentPos = linePos.copy(column = command.length + 2)
+
+          commandKindCandidates.toList match {
+            case List(LINECOMMENT)              => Nil
+            case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: (commandKind match {
+                case STRING                        => STRLIT(tail, argumentPos)
+                case DELAY | DEFAULTDELAY | REPEAT =>
+                  if(INTLITKIND matches tail.trim) {
+                    INTLIT(tail.trim.toInt, argumentPos)
+                  } else {
+                    error("Bad integer literal: " + tail, argumentPos)
+                    new Token(BAD, argumentPos)
+                  }
+                case _                             => KEYNAME(tail.trim, argumentPos)
+              }) :: newline :: Nil
+            case _                              => {
+              error("Unknown or ambiguous command: " + command, linePos)
+              new Token(BAD, linePos) :: Nil
+            }
+          }
+        }
+      }
+    }).toIterator
+  }
 
 }
