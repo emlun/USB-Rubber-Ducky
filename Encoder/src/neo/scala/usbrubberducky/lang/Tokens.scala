@@ -39,6 +39,11 @@ object Tokens {
     override def matches(value: String)     = keywords contains value
   }
 
+  case object BAD extends TokenKind {
+    override def startsWith(prefix: String) = false
+    override def matches(prefix: String)    = false
+  }
+
   case object ALT            extends KeywordKind("ALT")
   case object ALT_SHIFT      extends KeywordKind("ALT-SHIFT")
   case object ALT_TAB        extends KeywordKind("ALT-TAB")
