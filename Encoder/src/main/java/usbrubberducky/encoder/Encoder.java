@@ -304,7 +304,7 @@ public class Encoder {
 					} else if (instruction[0].equals("COMMAND-OPTION")) {
                                         if (instruction.length != 1) {
                                                 file.add(strInstrToByte(instruction[1]));
-                                                file.add((byte) (strToByte(keyboardProps.getProperty("MODIFIERKEY_KEY_LEFT_GUI"))
+                                                file.add((byte) (strToByte(keyboardProps.getProperty("MODIFIERKEY_LEFT_GUI"))
                                                                 | strToByte(keyboardProps.getProperty("MODIFIERKEY_ALT"))));
                                         } else {
                                                 continue;
