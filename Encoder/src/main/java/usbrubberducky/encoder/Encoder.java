@@ -209,9 +209,11 @@ public class Encoder {
                 for (int i = 0; i < instructions.length; i++) {
                         try {
                                 boolean delayOverride = false;
-                                String commentCheck = instructions[i].substring(0, 2);
-                                if (commentCheck.equals("//"))
-                                        continue;
+                                if(instructions[i].length() > 1) {
+                                  String commentCheck = instructions[i].substring(0, 2);
+                                  if (commentCheck.equals("//"))
+                                          continue;
+                                }
 				if (instructions[i].equals("\n"))
 					continue;
                                String[] instruction = instructions[i].split(" ", 2);
