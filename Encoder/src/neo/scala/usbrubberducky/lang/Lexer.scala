@@ -38,22 +38,6 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
-      def processSingleWord(commandOrKeyName: String): List[Token] = {
-        val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
-
-        commandKindCandidates.toList match {
-          case List(LINECOMMENT)              => Nil
-          case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
-          case Nil                            =>
-            if(KEYNAMEKIND matches commandOrKeyName) {
-              KEYNAME(commandOrKeyName, linePos) :: newline :: Nil
-            } else {
-              ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
-              new Token(BAD, linePos) :: Nil
-            }
-        }
-      }
-
       def processCommandWithArgument(command: String, argument: String): List[Token] = {
         val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
         val argumentPos = linePos.copy(column = command.length + 2)
@@ -83,10 +67,29 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       }
 
       line.split(" ", 2) match {
-        case Array(Trimmed(commandOrKeyName)) => processSingleWord(commandOrKeyName)
+        case Array(Trimmed(commandOrKeyName)) => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
         case Array(Trimmed(command), tail: String) => processCommandWithArgument(command, tail)
       }
     }
+
+  def processSingleWord
+      (ctx: Context, linePos: Position, newline: Token)
+      (commandOrKeyName: String)
+      : List[Token] = {
+    val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
+
+    commandKindCandidates.toList match {
+      case List(LINECOMMENT)              => Nil
+      case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
+      case Nil                            =>
+        if(KEYNAMEKIND matches commandOrKeyName) {
+          KEYNAME(commandOrKeyName, linePos) :: newline :: Nil
+        } else {
+          ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
+          new Token(BAD, linePos) :: Nil
+        }
+    }
+  }
 
   override def run(ctx: Context)(source: Source) =
     (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
