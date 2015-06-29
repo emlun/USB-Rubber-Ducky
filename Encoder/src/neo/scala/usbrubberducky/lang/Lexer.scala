@@ -69,6 +69,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
           KeyName(word, linePos) :: newline :: Nil
         } else {
           ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
+          suggestCommands(ctx.reporter)(word)
           new Token(BAD, linePos) :: Nil
         }
     }
