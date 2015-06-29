@@ -44,6 +44,11 @@ object Tokens {
     override def matches(prefix: String)    = false
   }
 
+  case object NEWLINE extends TokenKind {
+    override def startsWith(prefix: String) = false
+    override def matches(value: String)     = false
+  }
+
   case object ALT            extends KeywordKind("ALT")
   case object ALT_SHIFT      extends KeywordKind("ALT-SHIFT")
   case object ALT_TAB        extends KeywordKind("ALT-TAB")
