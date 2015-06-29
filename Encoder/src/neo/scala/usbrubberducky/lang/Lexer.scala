@@ -28,11 +28,6 @@ import Tokens._
 
 object Lexer extends Pipeline[Source, Iterator[Token]] {
 
-  val COMMAND_TOKEN_KINDS: Set[TokenKind] = Set(
-    DEFAULTDELAY, DELAY, REPEAT,
-    ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
-  )
-
   def isLineComment(line: String): Boolean = line.trim startsWith "REM"
 
   override def run(ctx: Context)(source: Source) =
@@ -55,9 +50,9 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       (ctx: Context, linePos: Position, newline: Token)
       (commandOrKeyName: String)
       : List[Token] = {
-    val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
+    val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches commandOrKeyName }
 
-    commandKindCandidates.toList match {
+    keywordKindCandidates.toList match {
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
       case Nil                            =>
         if(KEYNAMEKIND matches commandOrKeyName) {
@@ -73,10 +68,10 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       (ctx: Context, linePos: Position, newline: Token)
       (command: String, argument: String)
       : List[Token] = {
-    val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
+    val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches command }
     val argumentPos = linePos.copy(column = command.length + 2)
 
-    commandKindCandidates.toList match {
+    keywordKindCandidates.toList match {
       case List(commandKind: KeywordKind) =>
         new Token(commandKind, linePos) ::
         (commandKind match {
@@ -94,7 +89,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
         Nil
       case _                              => {
         ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
-        val suggestions = COMMAND_TOKEN_KINDS filter { _ startsWith command }
+        val suggestions = KEYWORD_TOKEN_KINDS filter { _ startsWith command }
         if(!suggestions.isEmpty) {
           ctx.reporter.info("Did you mean any of the following? " + (suggestions mkString ", "))
         }
