@@ -39,6 +39,8 @@ object Main extends App {
       case head :: tail            => Left("Unknown command line option or too few option arguments: " + head)
     }
 
+  val pipeline = (Lexer andThen Parser andThen NewEncoder)
+
   processArguments(args.toList, Settings()) match {
     case Left(settings) => {
       println("Invalid commandline arguments.")
@@ -46,13 +48,14 @@ object Main extends App {
     }
     case Right(settings) => {
       println("Sorry, this functionality is not yet implemented!")
-      settings.infile map { fileName =>
-        val bytes = (Lexer andThen Parser andThen NewEncoder).run(new Context(new Reporter, Some(fileName)))(Source fromFile fileName)
-        println("Bytes: " + bytes)
-      } orElse {
-        println("No input file specified.")
-        None
+
+      val bytes = settings.infile map { fileName =>
+        pipeline.run(new Context(new Reporter, settings.infile))(Source fromFile fileName)
+      } getOrElse {
+        pipeline.run(new Context(new Reporter, Some("STDIN")))(Source.stdin)
       }
+
+      println("Bytes: " + bytes)
     }
   }
 
