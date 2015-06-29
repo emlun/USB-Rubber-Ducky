@@ -19,8 +19,9 @@ package encoder
 
 import scala.io.Source
 
-import util.Context
 import lang.{Lexer,Parser}
+import util.Context
+import util.Reporter
 
 object Main extends App {
 
@@ -46,7 +47,7 @@ object Main extends App {
     case Right(settings) => {
       println("Sorry, this functionality is not yet implemented!")
       settings.infile map { fileName =>
-        val bytes = (Lexer andThen Parser andThen NewEncoder).run(new Context(Some(fileName)))(Source fromFile fileName)
+        val bytes = (Lexer andThen Parser andThen NewEncoder).run(new Context(new Reporter, Some(fileName)))(Source fromFile fileName)
         println("Bytes: " + bytes)
       } orElse {
         println("No input file specified.")
