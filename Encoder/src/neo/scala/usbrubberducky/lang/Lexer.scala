@@ -51,8 +51,8 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
       line.split(" ", 2) match {
-        case Array(Trimmed(word))                  => processSingleWord(ctx, linePos, newline)(word)
-        case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
+        case Array(Trimmed(word))               => processSingleWord(ctx, linePos, newline)(word)
+        case Array(Trimmed(head), tail: String) => processCommandWithArgument(ctx, linePos, newline)(head, tail)
       }
     }
 
