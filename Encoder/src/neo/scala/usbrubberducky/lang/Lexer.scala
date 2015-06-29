@@ -51,59 +51,50 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
       line.split(" ", 2) match {
-        case Array(Trimmed(word))               => processSingleWord(ctx, linePos, newline)(word)
-        case Array(Trimmed(head), tail: String) => processCommandWithArgument(ctx, linePos, newline)(head, tail)
+        case Array(Trimmed(word))       => List(processSingleWord(ctx, linePos)(word), newline)
+        case Array(Trimmed(head), tail) => processCommandWithArgument(ctx, linePos)(head, tail) ++: List(newline)
       }
     }
 
   def processSingleWord
-      (ctx: Context, linePos: Position, newline: Token)
+      (ctx: Context, linePos: Position)
       (word: String)
-      : List[Token] = {
+      : Token = {
     val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches word }
 
     keywordKindCandidates.toList match {
-      case List(commandKind: KeywordKind) => List(new Token(commandKind, linePos), newline)
+      case List(commandKind: KeywordKind) => new Token(commandKind, linePos)
       case Nil                            =>
         if(KEYNAMEKIND matches word) {
-          List(KeyName(word, linePos), newline)
+          KeyName(word, linePos)
         } else {
-          ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
+          ctx.reporter.error(s"Not a command or key name: $word", linePos)
           suggestCommands(ctx.reporter)(word)
-          List(new Token(BAD, linePos))
+          new Token(BAD, linePos)
         }
     }
   }
 
   def processCommandWithArgument
-      (ctx: Context, linePos: Position, newline: Token)
-      (command: String, argument: String)
+      (ctx: Context, linePos: Position)
+      (commandString: String, argumentString: String)
       : List[Token] = {
-    val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches command }
-    val argumentPos = linePos.copy(column = command.length + 2)
+    val command = processSingleWord(ctx, linePos)(commandString)
+    val argumentPos = linePos.copy(column = commandString.length + 2)
 
-    keywordKindCandidates.toList match {
-      case List(commandKind: KeywordKind) =>
-        new Token(commandKind, linePos) ::
-        (commandKind match {
-          case STRING                        => StringLit(argument, argumentPos)
-          case DELAY | DEFAULTDELAY | REPEAT =>
-            if(INTLITKIND matches argument.trim) {
-              IntLit(argument.trim.toInt, argumentPos)
-            } else {
-              ctx.reporter.error("Bad integer literal: " + argument, argumentPos)
-              new Token(BAD, argumentPos)
-            }
-          case _                             => KeyName(argument.trim, argumentPos)
-        }) ::
-        newline ::
-        Nil
-      case _                              => {
-        ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
-        suggestCommands(ctx.reporter)(command)
-        new Token(BAD, linePos) :: Nil
+    val argument = command.kind match {
+        case STRING                        => StringLit(argumentString, argumentPos)
+        case DELAY | DEFAULTDELAY | REPEAT =>
+          if(INTLITKIND matches argumentString.trim) {
+            IntLit(argumentString.trim.toInt, argumentPos)
+          } else {
+            ctx.reporter.error("Bad integer literal: " + argumentString, argumentPos)
+            new Token(BAD, argumentPos)
+          }
+        case _                             => KeyName(argumentString.trim, argumentPos)
       }
-    }
+
+    List(command, argument)
   }
 
 }
