@@ -28,13 +28,13 @@ import Tokens._
 
 object Lexer extends Pipeline[Source, Iterator[Token]] {
 
-  def isLineComment(line: String): Boolean = line.trim startsWith "REM"
+  def ignoreLine(line: String): Boolean = line.trim.isEmpty || (line.trim startsWith "REM")
 
   override def run(ctx: Context)(source: Source) =
     (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
 
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] =
-    if(isLineComment(line)) {
+    if(ignoreLine(line)) {
       Nil
     } else {
       val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
