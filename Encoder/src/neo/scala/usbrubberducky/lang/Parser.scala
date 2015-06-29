@@ -25,6 +25,11 @@ import ast.Trees._
 
 object Parser extends Pipeline[Iterator[Token], Script] {
 
-  override def run(ctx: Context)(tokens: Iterator[Token]) = Script(None, Nil)
+  override def run(ctx: Context)(tokens: Iterator[Token]) = {
+    tokens foreach { token =>
+      println(token)
+    }
+    Script(None, Nil)
+  }
 
 }
