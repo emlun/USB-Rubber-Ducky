@@ -28,4 +28,5 @@ case class Position(line: Int, column: Int, lineContent: String, fileName: Optio
   private lazy val _pos = OffsetPosition(lineContent, column - 1)
 
   def longString = _pos.longString
+  override def toString = (fileName map { _ + ":" } getOrElse "") + line + ":" + column
 }
