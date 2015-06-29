@@ -27,21 +27,21 @@ class Reporter(
   private var _hasErrors = false
   def hasErrors = _hasErrors
 
-  private def report(message: Any, pos: Option[Position]): Unit = pos map { pos =>
-        println(pos + ": " + message)
+  private def report(prefix: String, message: Any, pos: Option[Position]): Unit = pos map { pos =>
+        println(prefix + pos + ": " + message)
         println(pos.longString)
       } orElse {
-        println(message)
+        println(prefix + message)
         None
       }
 
-  def debug(message: Any, pos: Option[Position]): Unit = if(debug) { report(message, pos) }
-  def info(message: Any, pos: Option[Position]): Unit  = if(info)  { report(message, pos) }
-  def warn(message: Any, pos: Option[Position]): Unit  = if(warn)  { report(message, pos) }
+  def debug(message: Any, pos: Option[Position]): Unit = if(debug) { report("DEBUG: ", message, pos) }
+  def info(message: Any, pos: Option[Position]): Unit  = if(info)  { report("INFO: ", message, pos) }
+  def warn(message: Any, pos: Option[Position]): Unit  = if(warn)  { report("WARN: ", message, pos) }
   def error(message: Any, pos: Option[Position]): Unit = {
     _hasErrors = true
     if(error) {
-      report(message, pos)
+      report("ERROR: ", message, pos)
     }
   }
 
