@@ -22,6 +22,9 @@ import ast.Trees._
 
 object NewEncoder extends Pipeline[Script, List[Byte]] {
 
-  override def run(ctx: Context)(script: Script) = Nil
+  override def run(ctx: Context)(script: Script) = {
+    println(script)
+    Nil
+  }
 
 }
