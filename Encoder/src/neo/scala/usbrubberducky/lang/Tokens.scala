@@ -18,10 +18,11 @@ package usbrubberducky
 package lang
 
 import util.Position
+import util.Positioned
 
 object Tokens {
 
-  sealed class Token(val kind: TokenKind, val pos: Position) {
+  sealed class Token(val kind: TokenKind, pos: Position) extends Positioned(pos) {
     override def toString = kind.toString
   }
 
