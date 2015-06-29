@@ -34,8 +34,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
   )
 
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] = {
-    val lineNumber = lineIndex + 1
-    val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
+    val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
     val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
     line.split(" ", 2) match {
