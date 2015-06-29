@@ -22,6 +22,7 @@ import scala.io.Source
 import util.Context
 import util.Pipeline
 import util.Position
+import util.Reporter
 import util.Trimmed
 
 import Tokens._
@@ -29,6 +30,15 @@ import Tokens._
 object Lexer extends Pipeline[Source, Iterator[Token]] {
 
   def ignoreLine(line: String): Boolean = line.trim.isEmpty || (line.trim startsWith "REM")
+
+  def suggestCommands(reporter: Reporter)(attempt: String): Unit = {
+    val suggestions = KEYWORD_TOKEN_KINDS filter { _ startsWith attempt }
+    if(!suggestions.isEmpty) {
+      reporter.info(
+        "Did you mean any of the following? " + (suggestions flatMap (_.keywords) mkString ", ")
+      )
+    }
+  }
 
   override def run(ctx: Context)(source: Source) =
     (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
@@ -89,12 +99,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
         Nil
       case _                              => {
         ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
-        val suggestions = KEYWORD_TOKEN_KINDS filter { _ startsWith command }
-        if(!suggestions.isEmpty) {
-          ctx.reporter.info(
-            "Did you mean any of the following? " + (suggestions flatMap (_.keywords) mkString ", ")
-          )
-        }
+        suggestCommands(ctx.reporter)(command)
         new Token(BAD, linePos) :: Nil
       }
     }
