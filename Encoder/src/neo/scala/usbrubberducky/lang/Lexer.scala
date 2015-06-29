@@ -34,15 +34,15 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
   )
 
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] = {
-      val lineNumber = lineIndex + 1
-      val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
-      val newline = new Token(NEWLINE, linePos.copy(column = line.length))
+    val lineNumber = lineIndex + 1
+    val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
+    val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
-      line.split(" ", 2) match {
-        case Array(Trimmed(commandOrKeyName)) => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
-        case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
-      }
+    line.split(" ", 2) match {
+      case Array(Trimmed(commandOrKeyName))      => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
+      case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
     }
+  }
 
   def processSingleWord
       (ctx: Context, linePos: Position, newline: Token)
