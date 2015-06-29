@@ -17,19 +17,18 @@
 package usbrubberducky
 package ast
 
-import scala.util.parsing.input.Position
-import scala.util.parsing.input.NoPosition
+import util.Position
+import util.Positioned
+import util.NoPosition
 
 object Trees {
 
-  sealed trait Tree {
-    def pos: Position
-  }
+  sealed class Tree(pos: Position) extends Positioned(pos)
 
   sealed case class Script(defaultDelay: Option[DefaultDelay], statements: List[Statement])
-    extends Tree { override def pos = NoPosition }
+    extends Tree(NoPosition)
 
-  sealed case class DefaultDelay(pos: Position, delay: Int) extends Tree
+  sealed case class DefaultDelay(delay: Int, override val pos: Position) extends Tree(pos)
 
   sealed trait Statement extends Tree
 
