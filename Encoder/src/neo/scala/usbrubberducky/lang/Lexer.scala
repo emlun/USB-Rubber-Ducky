@@ -33,6 +33,9 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
   )
 
+  override def run(ctx: Context)(source: Source) =
+    (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
+
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] = {
     val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
     val newline = new Token(NEWLINE, linePos.copy(column = line.length))
@@ -92,8 +95,5 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       }
     }
   }
-
-  override def run(ctx: Context)(source: Source) =
-    (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
 
 }
