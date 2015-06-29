@@ -41,22 +41,22 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
       line.split(" ", 2) match {
-        case Array(Trimmed(commandOrKeyName))      => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
+        case Array(Trimmed(word))                  => processSingleWord(ctx, linePos, newline)(word)
         case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
       }
     }
 
   def processSingleWord
       (ctx: Context, linePos: Position, newline: Token)
-      (commandOrKeyName: String)
+      (word: String)
       : List[Token] = {
-    val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches commandOrKeyName }
+    val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches word }
 
     keywordKindCandidates.toList match {
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
       case Nil                            =>
-        if(KEYNAMEKIND matches commandOrKeyName) {
-          KeyName(commandOrKeyName, linePos) :: newline :: Nil
+        if(KEYNAMEKIND matches word) {
+          KeyName(word, linePos) :: newline :: Nil
         } else {
           ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
           new Token(BAD, linePos) :: Nil
