@@ -44,10 +44,9 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
           val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
 
           commandKindCandidates.toList match {
-            case List(LINECOMMENT) => Nil
-            case List(commandKind: KeywordKind) =>
-              new Token(commandKind, linePos) :: newline :: Nil
-            case Nil =>
+            case List(LINECOMMENT)              => Nil
+            case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
+            case Nil                            =>
               if(KEYNAMEKIND matches commandOrKeyName) {
                 KEYNAME(commandOrKeyName, linePos) :: newline :: Nil
               } else {
@@ -58,12 +57,13 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
         }
         case Array(Trimmed(command), tail: String) => {
           val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
-
           val argumentPos = linePos.copy(column = command.length + 2)
 
           commandKindCandidates.toList match {
             case List(LINECOMMENT)              => Nil
-            case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: (commandKind match {
+            case List(commandKind: KeywordKind) =>
+              new Token(commandKind, linePos) ::
+              (commandKind match {
                 case STRING                        => STRLIT(tail, argumentPos)
                 case DELAY | DEFAULTDELAY | REPEAT =>
                   if(INTLITKIND matches tail.trim) {
@@ -73,7 +73,9 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
                     new Token(BAD, argumentPos)
                   }
                 case _                             => KEYNAME(tail.trim, argumentPos)
-              }) :: newline :: Nil
+              }) ::
+              newline ::
+              Nil
             case _                              => {
               ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
               new Token(BAD, linePos) :: Nil
