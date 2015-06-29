@@ -57,7 +57,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
       case Nil                            =>
         if(KEYNAMEKIND matches commandOrKeyName) {
-          KEYNAME(commandOrKeyName, linePos) :: newline :: Nil
+          KeyName(commandOrKeyName, linePos) :: newline :: Nil
         } else {
           ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
           new Token(BAD, linePos) :: Nil
@@ -77,15 +77,15 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       case List(commandKind: KeywordKind) =>
         new Token(commandKind, linePos) ::
         (commandKind match {
-          case STRING                        => STRLIT(argument, argumentPos)
+          case STRING                        => StringLit(argument, argumentPos)
           case DELAY | DEFAULTDELAY | REPEAT =>
             if(INTLITKIND matches argument.trim) {
-              INTLIT(argument.trim.toInt, argumentPos)
+              IntLit(argument.trim.toInt, argumentPos)
             } else {
               ctx.reporter.error("Bad integer literal: " + argument, argumentPos)
               new Token(BAD, argumentPos)
             }
-          case _                             => KEYNAME(argument.trim, argumentPos)
+          case _                             => KeyName(argument.trim, argumentPos)
         }) ::
         newline ::
         Nil

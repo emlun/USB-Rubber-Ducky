@@ -40,6 +40,10 @@ object Tokens {
     override def toString = keywords mkString ", "
   }
 
+  object OfKind {
+    def unapply(token: Token): Option[TokenKind] = Some(token.kind)
+  }
+
   case object BAD extends TokenKind {
     override def startsWith(prefix: String) = false
     override def matches(prefix: String)    = false
@@ -79,13 +83,13 @@ object Tokens {
     override def matches(value: String)     = this startsWith value
   }
 
-  case class KEYNAME(override val value: String, override val pos: Position)
+  case class KeyName(override val value: String, override val pos: Position)
     extends ValueToken[String](KEYNAMEKIND, pos)
 
-  case class INTLIT(override val value: Int, override val pos: Position)
+  case class IntLit(override val value: Int, override val pos: Position)
     extends ValueToken[Int](INTLITKIND, pos)
 
-  case class STRLIT(override val value: String, override val pos: Position)
+  case class StringLit(override val value: String, override val pos: Position)
     extends ValueToken[String](STRLITKIND, pos)
 
 }
