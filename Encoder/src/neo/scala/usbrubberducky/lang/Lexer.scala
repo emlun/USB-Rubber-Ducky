@@ -38,37 +38,9 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
       val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
-      def processCommandWithArgument(command: String, argument: String): List[Token] = {
-        val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
-        val argumentPos = linePos.copy(column = command.length + 2)
-
-        commandKindCandidates.toList match {
-          case List(LINECOMMENT)              => Nil
-          case List(commandKind: KeywordKind) =>
-            new Token(commandKind, linePos) ::
-            (commandKind match {
-              case STRING                        => STRLIT(argument, argumentPos)
-              case DELAY | DEFAULTDELAY | REPEAT =>
-                if(INTLITKIND matches argument.trim) {
-                  INTLIT(argument.trim.toInt, argumentPos)
-                } else {
-                  ctx.reporter.error("Bad integer literal: " + argument, argumentPos)
-                  new Token(BAD, argumentPos)
-                }
-              case _                             => KEYNAME(argument.trim, argumentPos)
-            }) ::
-            newline ::
-            Nil
-          case _                              => {
-            ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
-            new Token(BAD, linePos) :: Nil
-          }
-        }
-      }
-
       line.split(" ", 2) match {
         case Array(Trimmed(commandOrKeyName)) => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
-        case Array(Trimmed(command), tail: String) => processCommandWithArgument(command, tail)
+        case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
       }
     }
 
@@ -88,6 +60,37 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
           ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
           new Token(BAD, linePos) :: Nil
         }
+    }
+  }
+
+  def processCommandWithArgument
+      (ctx: Context, linePos: Position, newline: Token)
+      (command: String, argument: String)
+      : List[Token] = {
+    val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
+    val argumentPos = linePos.copy(column = command.length + 2)
+
+    commandKindCandidates.toList match {
+      case List(LINECOMMENT)              => Nil
+      case List(commandKind: KeywordKind) =>
+        new Token(commandKind, linePos) ::
+        (commandKind match {
+          case STRING                        => STRLIT(argument, argumentPos)
+          case DELAY | DEFAULTDELAY | REPEAT =>
+            if(INTLITKIND matches argument.trim) {
+              INTLIT(argument.trim.toInt, argumentPos)
+            } else {
+              ctx.reporter.error("Bad integer literal: " + argument, argumentPos)
+              new Token(BAD, argumentPos)
+            }
+          case _                             => KEYNAME(argument.trim, argumentPos)
+        }) ::
+        newline ::
+        Nil
+      case _                              => {
+        ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
+        new Token(BAD, linePos) :: Nil
+      }
     }
   }
 
