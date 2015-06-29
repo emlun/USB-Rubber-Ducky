@@ -33,11 +33,6 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
   )
 
-  def error(msg: String, pos: Position): Unit = {
-    println(s"${pos.line}:${pos.column}: $msg")
-    println(pos.longString)
-  }
-
   override def run(ctx: Context)(source: Source) = {
     (source.getLines.zipWithIndex flatMap { case (line: String, lineIndex: Int) =>
       val lineNumber = lineIndex + 1
@@ -56,7 +51,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
               if(KEYNAMEKIND matches commandOrKeyName) {
                 KEYNAME(commandOrKeyName, linePos) :: newline :: Nil
               } else {
-                error("Only one word given, but is not a command or key name.", linePos)
+                ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
                 new Token(BAD, linePos) :: Nil
               }
           }
@@ -74,13 +69,13 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
                   if(INTLITKIND matches tail.trim) {
                     INTLIT(tail.trim.toInt, argumentPos)
                   } else {
-                    error("Bad integer literal: " + tail, argumentPos)
+                    ctx.reporter.error("Bad integer literal: " + tail, argumentPos)
                     new Token(BAD, argumentPos)
                   }
                 case _                             => KEYNAME(tail.trim, argumentPos)
               }) :: newline :: Nil
             case _                              => {
-              error("Unknown or ambiguous command: " + command, linePos)
+              ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
               new Token(BAD, linePos) :: Nil
             }
           }
