@@ -48,18 +48,18 @@ object Parser extends Pipeline[Iterator[Token], Script] {
     }
 
     def eat[T](expected: TokenKind*)(thenn: Token => Option[T]): Option[T] =
-      currentToken() flatMap { token =>
-        if(expected contains token.kind) {
-          bufferedToken = None
-          thenn(token)
-        } else {
-          ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
+      currentToken() orElse {
+          ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")
           None
+        } flatMap { token =>
+          if(expected contains token.kind) {
+            bufferedToken = None
+            thenn(token)
+          } else {
+            ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
+            None
+          }
         }
-      } orElse {
-        ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")
-        None
-      }
 
     def eatIntLit[T](andThen: (IntLit => T)): Option[T] = eat(INTLITKIND) { token =>
         token match {
