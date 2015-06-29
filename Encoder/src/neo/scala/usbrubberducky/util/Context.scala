@@ -17,5 +17,5 @@
 package usbrubberducky
 package util
 
-class Context {
+class Context(val inputFileName: Option[String] = None) {
 }
