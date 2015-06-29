@@ -31,4 +31,9 @@ case class Position(line: Int, column: Int, lineContent: String, fileName: Optio
   override def toString = (fileName map { _ + ":" } getOrElse "") + line + ":" + column
 }
 
+object NoPosition extends Position(0, 0, "") {
+  override def toString   = "<position unavailable>"
+  override def longString = toString
+}
+
 class Positioned(val pos: Position)
