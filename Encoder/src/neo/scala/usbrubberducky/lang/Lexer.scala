@@ -63,14 +63,14 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches word }
 
     keywordKindCandidates.toList match {
-      case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
+      case List(commandKind: KeywordKind) => List(new Token(commandKind, linePos), newline)
       case Nil                            =>
         if(KEYNAMEKIND matches word) {
-          KeyName(word, linePos) :: newline :: Nil
+          List(KeyName(word, linePos), newline)
         } else {
           ctx.reporter.error("Only one word given, but is not a command or key name.", linePos)
           suggestCommands(ctx.reporter)(word)
-          new Token(BAD, linePos) :: Nil
+          List(new Token(BAD, linePos))
         }
     }
   }
