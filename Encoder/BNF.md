@@ -8,16 +8,19 @@ classes overlap.
 
 - The `STRING` command is followed by a single literal space character, and any
   following non-newline characters are part of the `StringLit`.
-- DefaultDelay and Statements are separated by at least one newline followed by
-  any amount of whitespace.
+- `DefaultDelay`, `Statement`s and `LineComment`s are separated by at least one
+  newline followed by any amount of whitespace.
 - In all other cases, tokens are separated by any amount of spaces and tab
   characters.
+- They terminals `REM`, `STRING`, `DELAY`, `REPEAT`, `CONTROL`, `CTRL`, `ALT`,
+  `SHIFT, CTRL-ALT`, `CTRL-SHIFT`, `COMMAND-OPTION`, `ALT-SHIFT`, `ALT-TAB`,
+  `WINDOWS`, `GUI`, `COMMAND` have priority over the `KeyName` nonterminal when
+  appearing as the first token of a `Statement`.
 
-      Script       ::= DefaultDelay? Statement*
+      Script       ::= LineComment* DefaultDelay? LineComment* (Statement LineComment*)*
       DefaultDelay ::= (DEFAULT_DELAY | DEFAULTDELAY) IntLit
-      Statement    ::= Command | LineComment
       LineComment  ::= REM.*
-      Command      ::= STRING StringLit
+      Statement    ::= STRING StringLit
                      | DELAY IntLit
                      | REPEAT IntLit
                      | (CONTROL | CTRL) KeyName?
