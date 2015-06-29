@@ -61,7 +61,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
         None
       }
 
-    def readIntLit[T](andThen: (IntLit => T)): Option[T] = eat(INTLITKIND) { token =>
+    def eatIntLit[T](andThen: (IntLit => T)): Option[T] = eat(INTLITKIND) { token =>
         token match {
           case intLit: IntLit => Some(andThen(intLit))
           case _ => {
@@ -75,7 +75,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
       currentToken() match {
           case Some(defaultDelay@OfKind(DEFAULTDELAY)) => {
             readToken()
-            readIntLit { intLit => DefaultDelay(intLit) }
+            eatIntLit { intLit => DefaultDelay(intLit) }
           }
           case _                                 => None
         }
