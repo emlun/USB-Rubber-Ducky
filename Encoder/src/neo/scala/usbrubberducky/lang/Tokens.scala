@@ -37,6 +37,7 @@ object Tokens {
   sealed class KeywordKind(val keywords: String*) extends TokenKind {
     override def startsWith(prefix: String) = keywords.find(_.startsWith(prefix)).isDefined
     override def matches(value: String)     = keywords contains value
+    override def toString = keywords mkString ", "
   }
 
   case object BAD extends TokenKind {
