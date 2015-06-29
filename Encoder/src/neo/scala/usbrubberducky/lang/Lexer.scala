@@ -33,14 +33,14 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
   )
 
-  override def run(ctx: Context)(source: Source) =
-    (source.getLines.zipWithIndex flatMap { case (line: String, lineIndex: Int) =>
-      val lineNumber = lineIndex + 1
-      val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
-      val newline = new Token(NEWLINE, linePos.copy(column = line.length))
+  override def run(ctx: Context)(source: Source) = {
 
-      line.split(" ", 2) match {
-        case Array(Trimmed(commandOrKeyName)) => {
+    def processLine(line: String, lineIndex: Int): List[Token] = {
+        val lineNumber = lineIndex + 1
+        val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
+        val newline = new Token(NEWLINE, linePos.copy(column = line.length))
+
+        def processSingleWord(commandOrKeyName: String): List[Token] = {
           val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
 
           commandKindCandidates.toList match {
@@ -55,7 +55,8 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
               }
           }
         }
-        case Array(Trimmed(command), tail: String) => {
+
+        def processCommandWithArgument(command: String, argument: String): List[Token] = {
           val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches command }
           val argumentPos = linePos.copy(column = command.length + 2)
 
@@ -64,15 +65,15 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
             case List(commandKind: KeywordKind) =>
               new Token(commandKind, linePos) ::
               (commandKind match {
-                case STRING                        => STRLIT(tail, argumentPos)
+                case STRING                        => STRLIT(argument, argumentPos)
                 case DELAY | DEFAULTDELAY | REPEAT =>
-                  if(INTLITKIND matches tail.trim) {
-                    INTLIT(tail.trim.toInt, argumentPos)
+                  if(INTLITKIND matches argument.trim) {
+                    INTLIT(argument.trim.toInt, argumentPos)
                   } else {
-                    ctx.reporter.error("Bad integer literal: " + tail, argumentPos)
+                    ctx.reporter.error("Bad integer literal: " + argument, argumentPos)
                     new Token(BAD, argumentPos)
                   }
-                case _                             => KEYNAME(tail.trim, argumentPos)
+                case _                             => KEYNAME(argument.trim, argumentPos)
               }) ::
               newline ::
               Nil
@@ -82,7 +83,14 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
             }
           }
         }
+
+        line.split(" ", 2) match {
+          case Array(Trimmed(commandOrKeyName)) => processSingleWord(commandOrKeyName)
+          case Array(Trimmed(command), tail: String) => processCommandWithArgument(command, tail)
+        }
       }
-    }).toIterator
+
+    (source.getLines.zipWithIndex flatMap (processLine _).tupled).toIterator
+  }
 
 }
