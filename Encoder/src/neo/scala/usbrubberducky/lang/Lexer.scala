@@ -29,22 +29,27 @@ import Tokens._
 object Lexer extends Pipeline[Source, Iterator[Token]] {
 
   val COMMAND_TOKEN_KINDS: Set[TokenKind] = Set(
-    DEFAULTDELAY, DELAY, LINECOMMENT, REPEAT,
+    DEFAULTDELAY, DELAY, REPEAT,
     ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
   )
+
+  def isLineComment(line: String): Boolean = line.trim startsWith "REM"
 
   override def run(ctx: Context)(source: Source) =
     (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
 
-  def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] = {
-    val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
-    val newline = new Token(NEWLINE, linePos.copy(column = line.length))
+  def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] =
+    if(isLineComment(line)) {
+      Nil
+    } else {
+      val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
+      val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
-    line.split(" ", 2) match {
-      case Array(Trimmed(commandOrKeyName))      => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
-      case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
+      line.split(" ", 2) match {
+        case Array(Trimmed(commandOrKeyName))      => processSingleWord(ctx, linePos, newline)(commandOrKeyName)
+        case Array(Trimmed(command), tail: String) => processCommandWithArgument(ctx, linePos, newline)(command, tail)
+      }
     }
-  }
 
   def processSingleWord
       (ctx: Context, linePos: Position, newline: Token)
@@ -53,7 +58,6 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     val commandKindCandidates = COMMAND_TOKEN_KINDS filter { _ matches commandOrKeyName }
 
     commandKindCandidates.toList match {
-      case List(LINECOMMENT)              => Nil
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos) :: newline :: Nil
       case Nil                            =>
         if(KEYNAMEKIND matches commandOrKeyName) {
@@ -73,7 +77,6 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     val argumentPos = linePos.copy(column = command.length + 2)
 
     commandKindCandidates.toList match {
-      case List(LINECOMMENT)              => Nil
       case List(commandKind: KeywordKind) =>
         new Token(commandKind, linePos) ::
         (commandKind match {

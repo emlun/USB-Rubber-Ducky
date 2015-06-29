@@ -65,7 +65,6 @@ object Tokens {
   case object CTRL_SHIFT     extends KeywordKind("CTRL-SHIFT")
   case object DEFAULTDELAY   extends KeywordKind("DEFAULTDELAY", "DEFAULT_DELAY")
   case object DELAY          extends KeywordKind("DELAY")
-  case object LINECOMMENT    extends KeywordKind("REM")
   case object REPEAT         extends KeywordKind("REPEAT")
   case object SHIFT          extends KeywordKind("SHIFT")
   case object STRING         extends KeywordKind("STRING")
