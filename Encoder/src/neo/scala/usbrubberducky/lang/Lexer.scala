@@ -91,7 +91,9 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
         ctx.reporter.error("Unknown or ambiguous command: " + command, linePos)
         val suggestions = KEYWORD_TOKEN_KINDS filter { _ startsWith command }
         if(!suggestions.isEmpty) {
-          ctx.reporter.info("Did you mean any of the following? " + (suggestions mkString ", "))
+          ctx.reporter.info(
+            "Did you mean any of the following? " + (suggestions flatMap (_.keywords) mkString ", ")
+          )
         }
         new Token(BAD, linePos) :: Nil
       }
