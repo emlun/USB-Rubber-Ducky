@@ -78,8 +78,8 @@ object Tokens {
   case object SUPER          extends KeywordKind("GUI", "WINDOWS")
 
   case object KEYNAMEKIND extends TokenKind {
-    override def startsWith(prefix: String) = prefix matches "[a-zA-Z-_0-9]*"
-    override def matches(value: String)     = value  matches "[a-zA-Z-_0-9]+"
+    override def startsWith(prefix: String) = prefix matches "[a-zA-Z_0-9]*"
+    override def matches(value: String)     = value  matches "[a-zA-Z_0-9]+"
   }
   case object INTLITKIND extends TokenKind {
     override def startsWith(prefix: String) = prefix.isEmpty || (prefix matches "0|[1-9][0-9]*")
