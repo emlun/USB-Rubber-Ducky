@@ -85,6 +85,49 @@ object Parser extends Pipeline[Iterator[Token], Script] {
         }
       }
 
+    def eatStringLit[T](andThen: (StringLit => T)): Option[T] = eat(STRLITKIND) { token =>
+        token match {
+          case stringLit: StringLit => Some(andThen(stringLit))
+          case _ => {
+            ctx.reporter.error(s"Expected string literal, got ${token.kind}", token.pos)
+            None
+          }
+        }
+      }
+
+    def maybeEatKeyPress(): Option[KeyPress] = eat(KEYNAMEKIND, NEWLINE) { maybeKeyName =>
+        maybeKeyName match {
+          case keyName: KeyName => Some(KeyPress(keyName))
+          case _                => None
+        }
+      }
+
+    def parseStatement(): Option[Statement] = eat(BEGIN_STATEMENT_TOKEN_KINDS.toList:_*) { token => token match {
+          case OfKind(NEWLINE)        => None
+          case keyName: KeyName       => Some(KeyPress(keyName))
+          case OfKind(ALT)            => Some(Alt(maybeEatKeyPress(), token.pos))
+          case OfKind(ALT_SHIFT)      => Some(AltShift(maybeEatKeyPress(), token.pos))
+          case OfKind(ALT_TAB)        => Some(AltTab(token.pos))
+          case OfKind(COMMAND)        => Some(Command(maybeEatKeyPress(), token.pos))
+          case OfKind(COMMAND_OPTION) => Some(CommandOption(maybeEatKeyPress(), token.pos))
+          case OfKind(CONTROL)        => Some(Ctrl(maybeEatKeyPress(), token.pos))
+          case OfKind(CTRL_ALT)       => Some(CtrlAlt(maybeEatKeyPress(), token.pos))
+          case OfKind(CTRL_SHIFT)     => Some(CtrlShift(maybeEatKeyPress(), token.pos))
+          case OfKind(SHIFT)          => Some(Shift(maybeEatKeyPress(), token.pos))
+          case OfKind(SUPER)          => Some(Super(maybeEatKeyPress(), token.pos))
+          case OfKind(DELAY)          => eatIntLit    { intLit    => Delay(intLit) }
+          case OfKind(REPEAT)         => eatIntLit    { intLit    => Repeat(intLit) }
+          case OfKind(STRING)         => eatStringLit { stringLit => TypeString(stringLit) }
+          case _                      => None
+        }
+      }
+
+    def parseStatements(): List[Statement] =
+      if(tokens.hasNext) {
+        val stmt = parseStatement()
+        stmt ++: parseStatements()
+      } else Nil
+
     def parseDefaultDelay(): Option[DefaultDelay] =
       currentToken() match {
           case Some(defaultDelay@OfKind(DEFAULTDELAY)) => {
@@ -96,7 +139,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
 
     Script(
       defaultDelay = parseDefaultDelay(),
-      statements   = Nil
+      statements   = parseStatements()
     )
   }
 

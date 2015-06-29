@@ -27,6 +27,7 @@ object Tokens {
     ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
   )
 
+  val BEGIN_STATEMENT_TOKEN_KINDS: Set[TokenKind] = COMMAND_TOKEN_KINDS ++ Set(KEYNAMEKIND, NEWLINE)
   val KEYWORD_TOKEN_KINDS: Set[KeywordKind] = COMMAND_TOKEN_KINDS + DEFAULTDELAY
 
   sealed class Token(val kind: TokenKind, pos: Position) extends Positioned(pos) {
