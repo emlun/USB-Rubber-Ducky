@@ -32,8 +32,15 @@ object Parser extends Pipeline[Iterator[Token], Script] {
 
     var bufferedToken: Option[Token] = None
 
+    /**
+     * Get the current token, or read and return the next token if the current
+     * is undefined.
+     */
     def currentToken(): Option[Token] = bufferedToken orElse readToken()
 
+    /**
+     * Read the next token into the current token buffer, and return it.
+     */
     def readToken(): Option[Token] = {
       bufferedToken =
         if(tokens.hasNext) {
@@ -47,6 +54,13 @@ object Parser extends Pipeline[Iterator[Token], Script] {
       bufferedToken
     }
 
+
+    /**
+     * Test if the current token is of the expected type. If it is, then unset
+     * the current token buffer and pass the token as the argument to the thenn
+     * function. If it is not, then produce an error message and do not run the
+     * thenn function.
+     */
     def eat[T](expected: TokenKind*)(thenn: Token => Option[T]): Option[T] =
       currentToken() orElse {
           ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")
