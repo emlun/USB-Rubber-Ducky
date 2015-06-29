@@ -1,7 +1,10 @@
 DuckyScript BNF
 ===
 
-Backus-Naur Form grammar for DuckyScript
+Backus-Naur Form grammar for DuckyScript.
+
+This is not an LL(1) grammar since the `StringLit`, `IntLit` and `KeyName`
+classes overlap.
 
 - The `STRING` command is followed by a single literal space character, and any
   following non-newline characters are part of the `StringLit`.
