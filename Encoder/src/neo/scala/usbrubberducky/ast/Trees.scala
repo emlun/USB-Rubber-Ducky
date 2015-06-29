@@ -21,15 +21,37 @@ import util.Position
 import util.Positioned
 import util.NoPosition
 
+import lang.Tokens
+import Tokens.IntLit
+import Tokens.KeyName
+import Tokens.StringLit
+
 object Trees {
 
-  sealed class Tree(pos: Position) extends Positioned(pos)
+  sealed abstract class Tree(pos: Position) extends Positioned(pos)
 
-  sealed case class Script(defaultDelay: Option[DefaultDelay], statements: List[Statement])
+  case class Script(defaultDelay: Option[DefaultDelay], statements: List[Statement])
     extends Tree(NoPosition)
 
-  sealed case class DefaultDelay(delay: Int, override val pos: Position) extends Tree(pos)
+  case class DefaultDelay(delay: IntLit) extends Tree(delay.pos)
 
-  sealed trait Statement extends Tree
+  sealed abstract class Statement(pos: Position) extends Tree(pos)
+
+  case class KeyPress(keyName: KeyName) extends Statement(keyName.pos)
+
+  case class Alt(key: Option[KeyPress],           override val pos: Position) extends Statement(pos)
+  case class AltShift(key: Option[KeyPress],      override val pos: Position) extends Statement(pos)
+  case class AltTab(                              override val pos: Position) extends Statement(pos)
+  case class Command(key: Option[KeyPress],       override val pos: Position) extends Statement(pos)
+  case class CommandOption(key: Option[KeyPress], override val pos: Position) extends Statement(pos)
+  case class Ctrl(key: Option[KeyPress],          override val pos: Position) extends Statement(pos)
+  case class CtrlAlt(key: Option[KeyPress],       override val pos: Position) extends Statement(pos)
+  case class CtrlShift(key: Option[KeyPress],     override val pos: Position) extends Statement(pos)
+  case class Shift(key: Option[KeyPress],         override val pos: Position) extends Statement(pos)
+  case class Super(key: Option[KeyPress],         override val pos: Position) extends Statement(pos)
+
+  case class Delay(milliseconds: IntLit)  extends Statement(milliseconds.pos)
+  case class Repeat(times: IntLit)        extends Statement(times.pos)
+  case class TypeString(value: StringLit) extends Statement(value.pos)
 
 }

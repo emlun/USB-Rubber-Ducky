@@ -42,7 +42,7 @@ object Tokens {
     def startsWith(prefix: String): Boolean
     def matches(value: String): Boolean
   }
-  sealed class KeywordKind(val keywords: String*) extends TokenKind {
+  sealed abstract class KeywordKind(val keywords: String*) extends TokenKind {
     override def startsWith(prefix: String) = keywords.find(_.startsWith(prefix)).isDefined
     override def matches(value: String)     = keywords contains value
   }
