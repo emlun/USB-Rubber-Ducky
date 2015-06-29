@@ -41,7 +41,7 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
   override def run(ctx: Context)(source: Source) = {
     (source.getLines.zipWithIndex flatMap { case (line: String, lineIndex: Int) =>
       val lineNumber = lineIndex + 1
-      val linePos = Position(lineNumber, 1, line)
+      val linePos = Position(lineNumber, 1, line, fileName = ctx.inputFileName)
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
       line.split(" ", 2) match {

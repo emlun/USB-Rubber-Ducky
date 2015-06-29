@@ -24,7 +24,7 @@ import scala.util.parsing.input.OffsetPosition
  * @param column 1-indexed column number
  * @param lineContent the content of the line this position is in
  */
-case class Position(line: Int, column: Int, lineContent: String) {
+case class Position(line: Int, column: Int, lineContent: String, fileName: Option[String] = None) {
   private lazy val _pos = OffsetPosition(lineContent, column - 1)
 
   def longString = _pos.longString
