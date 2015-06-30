@@ -46,11 +46,8 @@ object Main extends App {
     }
 
   processArguments(args.toList, Settings()) match {
-    case Left(settings) => {
-      println("Invalid commandline arguments.")
-      println(settings)
-    }
-    case Right(settings) => {
+    case Left(errorMessage) => println(errorMessage)
+    case Right(settings)    => {
       val pipeline = settings match {
         case Settings(_, _, _, true) =>
           Lexer andThen Parser andThen new Pipeline[Script, Unit]() {
