@@ -19,8 +19,12 @@ package encoder
 
 import scala.io.Source
 
+import ast.Trees.Script
+import ast.Printer
+
 import lang.{Lexer,Parser}
 import util.Context
+import util.Pipeline
 import util.Reporter
 
 object Main extends App {
@@ -28,7 +32,8 @@ object Main extends App {
   private case class Settings(
     infile: Option[String] = None,
     outfile: Option[String] = None,
-    layout: Option[String] = None
+    layout: Option[String] = None,
+    prettyPrint: Boolean = false
   )
 
   private def processArguments(args: List[String], settings: Settings): Either[String, Settings] = args match {
@@ -36,10 +41,9 @@ object Main extends App {
       case "-i" :: infile  :: tail => processArguments(tail, settings.copy(infile  = Some(infile)))
       case "-o" :: outfile :: tail => processArguments(tail, settings.copy(outfile = Some(outfile)))
       case "-l" :: layout  :: tail => processArguments(tail, settings.copy(layout  = Some(layout)))
+      case "--pretty" :: tail      => processArguments(tail, settings.copy(prettyPrint = true))
       case head :: tail            => Left("Unknown command line option or too few option arguments: " + head)
     }
-
-  val pipeline = (Lexer andThen Parser andThen NewEncoder)
 
   processArguments(args.toList, Settings()) match {
     case Left(settings) => {
@@ -47,15 +51,19 @@ object Main extends App {
       println(settings)
     }
     case Right(settings) => {
-      println("Sorry, this functionality is not yet implemented!")
+      val pipeline = settings match {
+        case Settings(_, _, _, true) =>
+          Lexer andThen Parser andThen new Pipeline[Script, Unit]() {
+            override def run(ctx: Context)(script: Script) = println(Printer.prettyPrint(script))
+          }
+        case _ => Lexer andThen Parser andThen NewEncoder
+      }
 
-      val bytes = settings.infile map { fileName =>
+      settings.infile map { fileName =>
         pipeline.run(new Context(new Reporter, settings.infile))(Source fromFile fileName)
       } getOrElse {
         pipeline.run(new Context(new Reporter, Some("STDIN")))(Source.stdin)
       }
-
-      println("Bytes: " + bytes)
     }
   }
 
