@@ -14,8 +14,7 @@ classes overlap.
   characters.
 - They terminals `REM`, `STRING`, `DELAY`, `REPEAT`, `CONTROL`, `CTRL`, `ALT`,
   `SHIFT, CTRL-ALT`, `CTRL-SHIFT`, `COMMAND-OPTION`, `ALT-SHIFT`, `ALT-TAB`,
-  `WINDOWS`, `GUI`, `COMMAND` have priority over the `KeyName` nonterminal when
-  appearing as the first token of a `Statement`.
+  `WINDOWS`, `GUI`, `COMMAND` have priority over the `KeyName` nonterminal.
 
       Script       ::= LineComment* DefaultDelay? LineComment* (Statement LineComment*)*
       DefaultDelay ::= (DEFAULT_DELAY | DEFAULTDELAY) IntLit
