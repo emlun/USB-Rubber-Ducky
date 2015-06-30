@@ -20,12 +20,13 @@ package encoder
 import scala.io.Source
 
 import ast.Trees.Script
-import ast.Printer
+import ast.PrettyPrinter
 
 import lang.{Lexer,Parser}
 import util.Context
 import util.Pipeline
 import util.Reporter
+import util.StdoutPrinter
 
 object Main extends App {
 
@@ -49,11 +50,8 @@ object Main extends App {
     case Left(errorMessage) => println(errorMessage)
     case Right(settings)    => {
       val pipeline = settings match {
-        case Settings(_, _, _, true) =>
-          Lexer andThen Parser andThen new Pipeline[Script, Unit]() {
-            override def run(ctx: Context)(script: Script) = println(Printer.prettyPrint(script))
-          }
-        case _ => Lexer andThen Parser andThen NewEncoder
+        case Settings(_, _, _, true) => Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
+        case _                       => Lexer andThen Parser andThen NewEncoder
       }
 
       val (fileName: String, source: Source) = settings.infile map { fileName =>
