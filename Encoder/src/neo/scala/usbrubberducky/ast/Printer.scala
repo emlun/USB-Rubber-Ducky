@@ -17,6 +17,9 @@
 package usbrubberducky
 package ast
 
+import util.Context
+import util.Pipeline
+
 import Trees._
 
 object Printer {
@@ -48,4 +51,8 @@ object Printer {
     } mkString "\n")
   }
 
+}
+
+object PrettyPrinter extends Pipeline[Script, String]() {
+  override def run(ctx: Context)(script: Script) = Printer.prettyPrint(script)
 }
