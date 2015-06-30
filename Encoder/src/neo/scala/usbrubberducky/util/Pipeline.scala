@@ -31,3 +31,7 @@ trait Pipeline[-I, +O] {
   }
 
 }
+
+object StdoutPrinter extends Pipeline[String, Unit] {
+  override def run(ctx: Context)(s: String) = println(s)
+}
