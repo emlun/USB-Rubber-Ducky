@@ -27,9 +27,9 @@ object Printer {
   private def keyPressOptionToString(key: Option[KeyPress]): String =
     key map { " " + _.keyName.value } getOrElse ""
 
-  def prettyPrint(script: Script): String = {
-    val defdel = script.defaultDelay map { tree => s"DEFAULT_DELAY ${tree.delay.value}" } getOrElse ""
-    defdel + "\n" + (script.statements map { statement =>
+  def prettyPrint(script: Script): String =
+    (script.defaultDelay map { tree => s"DEFAULT_DELAY ${tree.delay.value}\n" } getOrElse "") +
+    (script.statements map { statement =>
       statement match {
         case KeyPress(keyName) => keyName.value
 
@@ -49,7 +49,6 @@ object Printer {
         case TypeString(value)   => "STRING " + value.value
       }
     } mkString "\n")
-  }
 
 }
 
