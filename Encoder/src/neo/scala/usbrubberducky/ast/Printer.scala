@@ -28,7 +28,7 @@ object Printer {
     key map { " " + _.keyName.value } getOrElse ""
 
   def prettyPrint(script: Script): String =
-    (script.defaultDelay map { tree => s"DEFAULT_DELAY ${tree.delay.value}\n" } getOrElse "") +
+    (script.defaultDelay map { tree => s"DEFAULT_DELAY ${tree.milliseconds.value}\n" } getOrElse "") +
     (script.statements map { statement =>
       statement match {
         case KeyPress(keyName) => keyName.value

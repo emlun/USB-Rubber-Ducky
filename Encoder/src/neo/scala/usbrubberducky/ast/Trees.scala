@@ -33,7 +33,7 @@ object Trees {
   case class Script(defaultDelay: Option[DefaultDelay], statements: List[Statement])
     extends Tree(NoPosition)
 
-  case class DefaultDelay(delay: IntLit) extends Tree(delay.pos)
+  case class DefaultDelay(milliseconds: IntLit) extends Tree(milliseconds.pos)
 
   sealed abstract class Statement(pos: Position) extends Tree(pos)
 
