@@ -58,7 +58,7 @@ object Main extends App {
           (fileName, Source fromFile fileName)
         } getOrElse ("STDIN",  Source.stdin)
 
-      pipeline.run(new Context(new Reporter, Some(fileName)))(source)
+      pipeline.run(new Context(inputFileName = Some(fileName)))(source)
     }
   }
 
