@@ -59,11 +59,11 @@ object Main extends App {
         case _ => Lexer andThen Parser andThen NewEncoder
       }
 
-      settings.infile map { fileName =>
-        pipeline.run(new Context(new Reporter, settings.infile))(Source fromFile fileName)
-      } getOrElse {
-        pipeline.run(new Context(new Reporter, Some("STDIN")))(Source.stdin)
-      }
+      val (fileName: String, source: Source) = settings.infile map { fileName =>
+          (fileName, Source fromFile fileName)
+        } getOrElse ("STDIN",  Source.stdin)
+
+      pipeline.run(new Context(new Reporter, Some(fileName)))(source)
     }
   }
 
