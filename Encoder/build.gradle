@@ -10,7 +10,9 @@ task wrapper(type: Wrapper) {
 
 sourceSets {
   main.java.exclude 'usbrubberducky/encoder/Encoder_GUI.java'
-  neo
+  neo {
+    resources.srcDir 'src/main/resources'
+  }
 }
 
 repositories { mavenCentral() }
