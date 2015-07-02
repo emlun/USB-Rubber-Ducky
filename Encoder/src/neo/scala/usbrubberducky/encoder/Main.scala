@@ -64,9 +64,10 @@ object Main extends App {
         case _                       => Lexer andThen Parser andThen NewEncoder
       }
 
-      val (fileName: String, source: Source) = settings.infile map { fileName =>
-          (fileName, Source fromFile fileName)
-        } getOrElse ("STDIN",  Source.stdin)
+      val (fileName: String, source: Source) = settings.infile match {
+          case Some(fileName) => (fileName, Source fromFile fileName)
+          case None           => ("STDIN",  Source.stdin)
+        }
 
       pipeline.run(new Context(inputFileName = Some(fileName)))(source)
       ExitCodes.success
