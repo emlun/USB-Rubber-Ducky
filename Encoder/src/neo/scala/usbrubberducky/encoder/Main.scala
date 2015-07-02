@@ -86,7 +86,7 @@ object Main extends App {
                 case None           => ("STDIN",  Source.stdin)
               }
 
-            val context = new Context(inputFileName = Some(fileName))
+            val context = new Context(layout = layout, inputFileName = Some(fileName))
             pipeline.run(context)(source)
             ExitCodes.success
           }

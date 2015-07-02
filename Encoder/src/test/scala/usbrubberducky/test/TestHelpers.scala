@@ -23,6 +23,14 @@ import util.Context
 
 trait TestHelpers {
 
-  def newContext: Context = new Context()
+  private def loadProperties(resourceName: String): Properties = {
+    val result = new Properties()
+    result.load(getClass().getResourceAsStream(resourceName))
+    result
+  }
+
+  private val layout = loadProperties("/usbrubberducky/encoder/us.properties")
+
+  def newContext: Context = new Context(layout = layout)
 
 }

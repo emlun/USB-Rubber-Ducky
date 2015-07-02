@@ -17,8 +17,11 @@
 package usbrubberducky
 package util
 
+import java.util.Properties
+
 class Context(
     makeReporter: =>Reporter = { new Reporter },
+    val layout: Properties,
     val inputFileName: Option[String] = None
     ) {
   val reporter = makeReporter
