@@ -17,7 +17,14 @@
 package usbrubberducky
 package encoder
 
+import java.io.InputStream
+import java.io.IOException
+import java.util.Properties
+
 import scala.io.Source
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 import ast.Trees.Script
 import ast.PrettyPrinter
@@ -33,6 +40,8 @@ object Main extends App {
   private object ExitCodes {
     val success = 0
     val badCommandlineArguments = 1
+    val invalidLayout = 2
+    val layoutFailed = 3
   }
 
   private case class Settings(
@@ -64,13 +73,31 @@ object Main extends App {
         case _                       => Lexer andThen Parser andThen NewEncoder
       }
 
-      val (fileName: String, source: Source) = settings.infile match {
-          case Some(fileName) => (fileName, Source fromFile fileName)
-          case None           => ("STDIN",  Source.stdin)
-        }
+      Try(
+          getClass().getResourceAsStream(settings.layout + ".properties")
+        ) map { stream: InputStream =>
+          val result = new Properties()
+          result.load(stream)
+          result
+        } match {
+          case Success(layout: Properties) => {
+            val (fileName: String, source: Source) = settings.infile match {
+                case Some(fileName) => (fileName, Source fromFile fileName)
+                case None           => ("STDIN",  Source.stdin)
+              }
 
-      pipeline.run(new Context(inputFileName = Some(fileName)))(source)
-      ExitCodes.success
+            val context = new Context(inputFileName = Some(fileName))
+            pipeline.run(context)(source)
+            ExitCodes.success
+          }
+          case Failure(error) => error match {
+              case _: NullPointerException => err(s"Unknown layout: ${settings.layout}", ExitCodes.invalidLayout)
+              case error: IOException =>
+                err(s"Failed to load layout definition: ${settings.layout} ($error)", ExitCodes.layoutFailed)
+              case error: IllegalArgumentException =>
+                err(s"Corrupted layout definition: ${settings.layout} ($error)", ExitCodes.layoutFailed)
+            }
+        }
     }
   }
 
