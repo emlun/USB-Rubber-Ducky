@@ -37,11 +37,17 @@ import util.StdoutPrinter
 
 object Main extends App {
 
+  /**
+   * 0-9 range: General
+   * 10-19 range: Bad input
+   * 20-29 range: Internal errors (file bug report)
+   */
   private object ExitCodes {
     val success = 0
-    val badCommandlineArguments = 1
-    val invalidLayout = 2
-    val layoutFailed = 3
+    val failure = 1
+    val badCommandlineArguments = 10
+    val invalidLayout = 11
+    val layoutFailed = 20
   }
 
   private case class Settings(
