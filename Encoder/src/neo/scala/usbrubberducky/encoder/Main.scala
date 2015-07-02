@@ -30,6 +30,11 @@ import util.StdoutPrinter
 
 object Main extends App {
 
+  private object ExitCodes {
+    val success = 0
+    val badCommandlineArguments = 1
+  }
+
   private case class Settings(
     infile: Option[String] = None,
     outfile: Option[String] = None,
@@ -46,8 +51,13 @@ object Main extends App {
       case head :: tail            => Left("Unknown command line option or too few option arguments: " + head)
     }
 
-  processArguments(args.toList, Settings()) match {
-    case Left(errorMessage) => println(errorMessage)
+  private def err(message: String, exitCode: Int): Int = {
+    Console.err.println("ERROR: " + message)
+    exitCode
+  }
+
+  val exitCode : Int = processArguments(args.toList, Settings()) match {
+    case Left(errorMessage) => err(errorMessage, ExitCodes.badCommandlineArguments)
     case Right(settings)    => {
       val pipeline = settings match {
         case Settings(_, _, _, true) => Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
@@ -59,7 +69,9 @@ object Main extends App {
         } getOrElse ("STDIN",  Source.stdin)
 
       pipeline.run(new Context(inputFileName = Some(fileName)))(source)
+      ExitCodes.success
     }
   }
 
+  System.exit(exitCode)
 }
