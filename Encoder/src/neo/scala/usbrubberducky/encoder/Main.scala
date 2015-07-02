@@ -33,7 +33,7 @@ object Main extends App {
   private case class Settings(
     infile: Option[String] = None,
     outfile: Option[String] = None,
-    layout: Option[String] = None,
+    layout: String = "us",
     prettyPrint: Boolean = false
   )
 
@@ -41,7 +41,7 @@ object Main extends App {
       case Nil                     => Right(settings)
       case "-i" :: infile  :: tail => processArguments(tail, settings.copy(infile  = Some(infile)))
       case "-o" :: outfile :: tail => processArguments(tail, settings.copy(outfile = Some(outfile)))
-      case "-l" :: layout  :: tail => processArguments(tail, settings.copy(layout  = Some(layout)))
+      case "-l" :: layout  :: tail => processArguments(tail, settings.copy(layout  = layout))
       case "--pretty" :: tail      => processArguments(tail, settings.copy(prettyPrint = true))
       case head :: tail            => Left("Unknown command line option or too few option arguments: " + head)
     }
