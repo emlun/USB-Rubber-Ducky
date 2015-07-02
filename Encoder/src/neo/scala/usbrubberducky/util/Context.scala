@@ -17,6 +17,9 @@
 package usbrubberducky
 package util
 
-class Context(makeReporter: =>Reporter = { new Reporter }, val inputFileName: Option[String] = None) {
+class Context(
+    makeReporter: =>Reporter = { new Reporter },
+    val inputFileName: Option[String] = None
+    ) {
   val reporter = makeReporter
 }
