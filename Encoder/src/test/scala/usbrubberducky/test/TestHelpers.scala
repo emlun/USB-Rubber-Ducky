@@ -29,8 +29,9 @@ trait TestHelpers {
     result
   }
 
+  private val keyboard = loadProperties("/usbrubberducky/encoder/keyboard.properties")
   private val layout = loadProperties("/usbrubberducky/encoder/us.properties")
 
-  def newContext: Context = new Context(layout = layout)
+  def newContext: Context = new Context(keyboard = keyboard, layout = layout)
 
 }

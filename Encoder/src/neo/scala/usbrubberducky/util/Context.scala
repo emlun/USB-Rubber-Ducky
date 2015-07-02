@@ -20,8 +20,9 @@ package util
 import java.util.Properties
 
 class Context(
-    makeReporter: =>Reporter = { new Reporter },
+    val keyboard: Properties,
     val layout: Properties,
+    makeReporter: =>Reporter = { new Reporter },
     val inputFileName: Option[String] = None
     ) {
   val reporter = makeReporter

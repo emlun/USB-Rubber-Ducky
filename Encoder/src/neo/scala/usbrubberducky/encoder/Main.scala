@@ -17,6 +17,7 @@
 package usbrubberducky
 package encoder
 
+import java.io.FileNotFoundException
 import java.io.InputStream
 import java.io.IOException
 import java.util.Properties
@@ -35,7 +36,7 @@ import util.Pipeline
 import util.Reporter
 import util.StdoutPrinter
 
-object Main extends App {
+object Main {
 
   /**
    * 0-9 range: General
@@ -46,8 +47,10 @@ object Main extends App {
     val success = 0
     val failure = 1
     val badCommandlineArguments = 10
-    val invalidLayout = 11
+    val inputFileFailed = 11
+    val invalidLayout = 12
     val layoutFailed = 20
+    val keyboardFailed = 21
   }
 
   private case class Settings(
@@ -57,55 +60,91 @@ object Main extends App {
     prettyPrint: Boolean = false
   )
 
-  private def processArguments(args: List[String], settings: Settings): Either[String, Settings] = args match {
-      case Nil                     => Right(settings)
+  private case class InputFile(fileName: String, source: Source)
+  private case class Inputs(settings: Settings, input: InputFile, layout: Properties, keyboard: Properties)
+
+  private def processArguments(args: List[String], settings: Settings): Settings = args match {
+      case Nil                     => settings
       case "-i" :: infile  :: tail => processArguments(tail, settings.copy(infile  = Some(infile)))
       case "-o" :: outfile :: tail => processArguments(tail, settings.copy(outfile = Some(outfile)))
       case "-l" :: layout  :: tail => processArguments(tail, settings.copy(layout  = layout))
       case "--pretty" :: tail      => processArguments(tail, settings.copy(prettyPrint = true))
-      case head :: tail            => Left("Unknown command line option or too few option arguments: " + head)
-    }
-
-  private def err(message: String, exitCode: Int): Int = {
-    Console.err.println("ERROR: " + message)
-    exitCode
-  }
-
-  val exitCode : Int = processArguments(args.toList, Settings()) match {
-    case Left(errorMessage) => err(errorMessage, ExitCodes.badCommandlineArguments)
-    case Right(settings)    => {
-      val pipeline = settings match {
-        case Settings(_, _, _, true) => Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
-        case _                       => Lexer andThen Parser andThen NewEncoder
-      }
-
-      Try(
-          getClass().getResourceAsStream(settings.layout + ".properties")
-        ) map { stream: InputStream =>
-          val result = new Properties()
-          result.load(stream)
-          result
-        } match {
-          case Success(layout: Properties) => {
-            val (fileName: String, source: Source) = settings.infile match {
-                case Some(fileName) => (fileName, Source fromFile fileName)
-                case None           => ("STDIN",  Source.stdin)
-              }
-
-            val context = new Context(layout = layout, inputFileName = Some(fileName))
-            pipeline.run(context)(source)
-            ExitCodes.success
-          }
-          case Failure(error) => error match {
-              case _: NullPointerException => err(s"Unknown layout: ${settings.layout}", ExitCodes.invalidLayout)
-              case error: IOException =>
-                err(s"Failed to load layout definition: ${settings.layout} ($error)", ExitCodes.layoutFailed)
-              case error: IllegalArgumentException =>
-                err(s"Corrupted layout definition: ${settings.layout} ($error)", ExitCodes.layoutFailed)
-            }
+      case head :: tail            => {
+          err("Unknown command line option or too few option arguments: " + head)
+          sys.exit(ExitCodes.badCommandlineArguments)
         }
     }
-  }
 
-  System.exit(exitCode)
+  private def err(message: String): Unit = Console.err.println("ERROR: " + message)
+
+  private def loadProperties(resourceName: String): Try[Properties] = Try({
+      val result = new Properties()
+      result.load(getClass().getResourceAsStream(resourceName))
+      result
+    })
+
+  private def runEncoder(inputs: Inputs): Int = {
+    val pipeline = if(inputs.settings.prettyPrint) {
+        Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
+      } else {
+        Lexer andThen Parser andThen NewEncoder
+      }
+
+      val context = new Context(inputs.keyboard, inputs.layout, inputFileName = Some(inputs.input.fileName))
+      pipeline.run(context)(inputs.input.source)
+
+      if(context.reporter.hasErrors) {
+        ExitCodes.failure
+      } else {
+        ExitCodes.success
+      }
+    }
+
+  def main(args: Array[String]) {
+    val settings = processArguments(args.toList, Settings())
+
+    val inputFile = Try(settings.infile match {
+          case Some(fileName) => InputFile(fileName, Source fromFile fileName)
+          case None           => InputFile("STDIN",  Source.stdin)
+        }) recover {
+          case _: FileNotFoundException => {
+            err(s"File not found: ${settings.infile}")
+            sys.exit(ExitCodes.inputFileFailed)
+          }
+          case _ => {
+            err(s"Failed to open input file: ${settings.infile}")
+            sys.exit(ExitCodes.inputFileFailed)
+          }
+        }
+
+    val layout = loadProperties(settings.layout + ".properties") recover {
+        case _: NullPointerException => {
+          err(s"Unknown layout: ${settings.layout}")
+          sys.exit(ExitCodes.invalidLayout)
+        }
+        case error: IOException => {
+          err(s"Failed to load layout definition: ${settings.layout} ($error)")
+          sys.exit(ExitCodes.layoutFailed)
+        }
+        case error: IllegalArgumentException => {
+          err(s"""Corrupted layout definition "${settings.layout}" - please file a bug report. ($error)""")
+          sys.exit(ExitCodes.layoutFailed)
+        }
+      }
+
+    val keyboard = loadProperties("keyboard.properties") recover {
+        case error => {
+          err(s"Failed to load keycode mapping - please file a bug report. ($error)")
+          sys.exit(ExitCodes.keyboardFailed)
+        }
+      }
+
+    val exitCode = (inputFile, layout, keyboard) match {
+      case (Success(inputFile), Success(layout), Success(keyboard)) =>
+        runEncoder(Inputs(settings, inputFile, layout, keyboard))
+      case _ => ExitCodes.failure
+    }
+
+    sys.exit(exitCode)
+  }
 }
