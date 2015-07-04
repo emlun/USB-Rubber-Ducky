@@ -31,6 +31,7 @@ import test._
 class ComparisonTest extends FunSpec with Matchers with TestHelpers {
 
   val TEST_FILES =
+    "src/test/resources/backspace.ducky" ::
     "src/test/resources/basic-terminal-commands-ubuntu.ducky" ::
     "src/test/resources/batch-wiper-drive-eraser.ducky" ::
     "src/test/resources/copy-file-to-desktop.ducky" ::
@@ -52,12 +53,16 @@ class ComparisonTest extends FunSpec with Matchers with TestHelpers {
     "src/test/resources/hide-cmd-window-2.ducky" ::
     "src/test/resources/hide-cmd-window-3.ducky" ::
     "src/test/resources/information-gathering-ubuntu.ducky" ::
+    "src/test/resources/keyboard-syms.ducky" ::
+    "src/test/resources/keynames-special.ducky" ::
+    "src/test/resources/keynames.ducky" ::
     "src/test/resources/local-dns-poisoning.ducky" ::
     "src/test/resources/lock-your-computer-message.ducky" ::
     "src/test/resources/mimikatz-2.ducky" ::
     "src/test/resources/mimikatz.ducky" ::
     "src/test/resources/missdirection.ducky" ::
     "src/test/resources/mobiletabs.ducky" ::
+    "src/test/resources/modifiers.ducky" ::
     "src/test/resources/mrgrays-rubber-hacks.ducky" ::
     "src/test/resources/netcat-ftp-download-and-reverse-shell.ducky" ::
     "src/test/resources/non-malicious-auto-defacer.ducky" ::
