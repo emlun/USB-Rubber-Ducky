@@ -30,24 +30,23 @@ object Printer {
   def prettyPrint(script: Script): String =
     (script.defaultDelay map { tree => s"DEFAULT_DELAY ${tree.milliseconds.value}\n" } getOrElse "") +
     (script.statements map { statement =>
-      statement match {
-        case KeyPress(keyName) => keyName.value
+      (statement match {
+        case KeyPress(keyName, _) => keyName.value
 
-        case Alt(key, _)           => "ALT"            + keyNameOptionToString(key)
-        case AltShift(key, _)      => "ALT-SHIFT"      + keyNameOptionToString(key)
-        case AltTab( _)            => "ALT-TAB"
-        case Command(key, _)       => "COMMAND"        + keyNameOptionToString(key)
-        case CommandOption(key, _) => "COMMAND-OPTION" + keyNameOptionToString(key)
-        case Ctrl(key, _)          => "CTRL"           + keyNameOptionToString(key)
-        case CtrlAlt(key, _)       => "CTRL-ALT"       + keyNameOptionToString(key)
-        case CtrlShift(key, _)     => "CTRL-SHIFT"     + keyNameOptionToString(key)
-        case Shift(key, _)         => "SHIFT"          + keyNameOptionToString(key)
-        case Super(key, _)         => "WINDOWS"        + keyNameOptionToString(key)
+        case Alt(key, _, _)           => "ALT"            + keyNameOptionToString(key)
+        case AltShift(key, _, _)      => "ALT-SHIFT"      + keyNameOptionToString(key)
+        case AltTab(_, _)             => "ALT-TAB"
+        case Command(key, _, _)       => "COMMAND"        + keyNameOptionToString(key)
+        case CommandOption(key, _, _) => "COMMAND-OPTION" + keyNameOptionToString(key)
+        case Ctrl(key, _, _)          => "CTRL"           + keyNameOptionToString(key)
+        case CtrlAlt(key, _, _)       => "CTRL-ALT"       + keyNameOptionToString(key)
+        case CtrlShift(key, _, _)     => "CTRL-SHIFT"     + keyNameOptionToString(key)
+        case Shift(key, _, _)         => "SHIFT"          + keyNameOptionToString(key)
+        case Super(key, _, _)         => "WINDOWS"        + keyNameOptionToString(key)
 
-        case Delay(milliseconds) => "DELAY "  + milliseconds.value
-        case Repeat(times)       => "REPEAT " + times.value
-        case TypeString(value)   => "STRING " + value.value
-      }
+        case Delay(milliseconds, _) => "DELAY "  + milliseconds.value
+        case TypeString(value, _)   => "STRING " + value.value
+      }) + (statement.repeat map { "\nREPEAT " + _.times.value } getOrElse "")
     } mkString "\n")
 
 }

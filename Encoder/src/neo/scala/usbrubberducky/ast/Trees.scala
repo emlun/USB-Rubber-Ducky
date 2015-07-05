@@ -36,24 +36,26 @@ object Trees {
   }
 
   case class DefaultDelay(milliseconds: IntLit) extends PositionedBy(milliseconds) with Tree
+  case class Repeat(times: IntLit)              extends PositionedBy(times)        with Tree
 
-  sealed trait Statement extends Tree
+  sealed trait Statement extends Tree {
+    def repeat: Option[Repeat]
+  }
 
-  case class KeyPress(keyName: KeyName) extends PositionedBy(keyName) with Statement
+  case class KeyPress(keyName: KeyName, repeat: Option[Repeat]) extends PositionedBy(keyName) with Statement
 
-  case class Alt(key: Option[KeyName],           pos: Position) extends Statement
-  case class AltShift(key: Option[KeyName],      pos: Position) extends Statement
-  case class AltTab(                             pos: Position) extends Statement
-  case class Command(key: Option[KeyName],       pos: Position) extends Statement
-  case class CommandOption(key: Option[KeyName], pos: Position) extends Statement
-  case class Ctrl(key: Option[KeyName],          pos: Position) extends Statement
-  case class CtrlAlt(key: Option[KeyName],       pos: Position) extends Statement
-  case class CtrlShift(key: Option[KeyName],     pos: Position) extends Statement
-  case class Shift(key: Option[KeyName],         pos: Position) extends Statement
-  case class Super(key: Option[KeyName],         pos: Position) extends Statement
+  case class Alt(key: Option[KeyName],           repeat: Option[Repeat], pos: Position) extends Statement
+  case class AltShift(key: Option[KeyName],      repeat: Option[Repeat], pos: Position) extends Statement
+  case class AltTab(                             repeat: Option[Repeat], pos: Position) extends Statement
+  case class Command(key: Option[KeyName],       repeat: Option[Repeat], pos: Position) extends Statement
+  case class CommandOption(key: Option[KeyName], repeat: Option[Repeat], pos: Position) extends Statement
+  case class Ctrl(key: Option[KeyName],          repeat: Option[Repeat], pos: Position) extends Statement
+  case class CtrlAlt(key: Option[KeyName],       repeat: Option[Repeat], pos: Position) extends Statement
+  case class CtrlShift(key: Option[KeyName],     repeat: Option[Repeat], pos: Position) extends Statement
+  case class Shift(key: Option[KeyName],         repeat: Option[Repeat], pos: Position) extends Statement
+  case class Super(key: Option[KeyName],         repeat: Option[Repeat], pos: Position) extends Statement
 
-  case class Delay(milliseconds: IntLit)  extends PositionedBy(milliseconds) with Statement
-  case class Repeat(times: IntLit)        extends PositionedBy(times) with Statement
-  case class TypeString(value: StringLit) extends PositionedBy(value) with Statement
+  case class Delay(milliseconds: IntLit, repeat: Option[Repeat])  extends PositionedBy(milliseconds) with Statement
+  case class TypeString(value: StringLit, repeat: Option[Repeat]) extends PositionedBy(value)        with Statement
 
 }
