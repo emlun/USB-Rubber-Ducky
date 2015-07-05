@@ -33,7 +33,8 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     }) ++:
     Nil
 
-  private def encodeStatement(defaultDelay: Option[DefaultDelay])(statement: Statement): List[Byte] = {
+  private def encodeStatement(ctx: Context, defaultDelay: Option[DefaultDelay])
+                             (statement: Statement): List[Byte] = {
     val defaultDelayBytes = defaultDelay map { delay => encodeDelay(delay.milliseconds.value) } getOrElse Nil
 
     statement match {
@@ -43,7 +44,7 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
   override def run(ctx: Context)(script: Script) = {
 
-    val bytes: List[Byte] = script.statements flatMap encodeStatement(script.defaultDelay) _
+    val bytes: List[Byte] = script.statements flatMap encodeStatement(ctx, script.defaultDelay) _
 
     bytes
   }
