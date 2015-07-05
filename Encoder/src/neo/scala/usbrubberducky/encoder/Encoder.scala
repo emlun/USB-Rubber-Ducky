@@ -144,8 +144,15 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
         }
         case CtrlShift(Some(KeyPress(KeyName(value, _))), _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_CTRL", "MODIFIERKEY_SHIFT")
+
+        case CommandOption(None, pos) => {
+          ctx.reporter.warn("COMMAND-OPTION-nothing does nothing.", pos)
+          Nil
+        }
+        case CommandOption(Some(KeyPress(KeyName(value, _))), _) =>
+          encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI", "MODIFIERKEY_ALT")
       }) ++: (statement match {
-        case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) | CtrlShift(Some(_), _) => defaultDelayBytes
+        case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) | CtrlShift(Some(_), _) | CommandOption(Some(_), _) => defaultDelayBytes
         case _ => Nil
       })
     }

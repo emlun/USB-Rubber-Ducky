@@ -11,3 +11,5 @@ REM CTRL-ALT // Hangs old encoder due to infinite loop
 CTRL-ALT a
 REM CTRL-SHIFT // Hangs old encoder due to infinite loop
 CTRL-SHIFT a
+REM COMMAND-OPTION // Hangs old encoder due to infinite loop
+COMMAND-OPTION a
