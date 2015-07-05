@@ -113,7 +113,7 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
     def encodeStatement(statement: Statement): List[Byte] = {
       val defaultDelayBytes = script.defaultDelay map { delay => encodeDelay(delay.milliseconds.value) } getOrElse Nil
-      (statement match {
+      val statementBytes = (statement match {
         case Delay(IntLit(milliseconds, _), _) => encodeDelay(milliseconds)
 
         case TypeString(StringLit(value, _), _) =>
@@ -164,10 +164,28 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
         case Command(None, _, _) => encodeModifierKeypress("KEY_COMMAND")
         case Command(Some(KeyName(value, _)), _, _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
-      }) ++: (statement match {
+      })
+
+      val delayBytes = (statement match {
         case Delay(_,_) => Nil
         case _          => defaultDelayBytes
       })
+
+      /*
+       * This defaultDelay behaviour is wrong, but it agrees with the existing encoder.
+       * The existing encoder does this with DEFAULTDELAY 0xab:
+       *
+       * STRING a => 0400 00ab
+       * STRING a REPEAT 1 => 0400 00ab 0400 00ab
+       * STRING a REPEAT 2 => 0400 00ab 0400 0400 00ab
+       * STRING a REPEAT 3 => 0400 00ab 0400 0400 0400 00ab
+       *
+       * But it SHOULD do:
+       * STRING a REPEAT 3 => 0400 00ab 0400 00ab 0400 00ab 0400 00ab
+       */
+      statementBytes ++: delayBytes ++:
+        List.fill(statement.times.value - 1)(statementBytes).flatten ++:
+        (if(statement.times.value > 1) delayBytes else Nil)
     }
 
     val bytes: List[Byte] = script.statements flatMap encodeStatement _

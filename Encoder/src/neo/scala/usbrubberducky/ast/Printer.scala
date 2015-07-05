@@ -48,7 +48,7 @@ object Printer {
         case TypeString(value, _)   => "STRING " + value.value
       }) + (statement.times.value match {
         case 1 => ""
-        case times => "\nREPEAT " + times
+        case times => "\nREPEAT " + (times - 1)
       })
     } mkString "\n")
 
