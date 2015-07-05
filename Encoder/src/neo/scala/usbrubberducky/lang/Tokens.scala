@@ -80,14 +80,17 @@ object Tokens {
   case object KEYNAMEKIND extends TokenKind {
     override def startsWith(prefix: String) = prefix matches "[a-zA-Z_0-9]*"
     override def matches(value: String)     = value  matches "[a-zA-Z_0-9]+"
+    override def toString = "Key name"
   }
   case object INTLITKIND extends TokenKind {
     override def startsWith(prefix: String) = prefix.isEmpty || (prefix matches "0|[1-9][0-9]*")
     override def matches(value: String)     = value matches "0|[1-9][0-9]*"
+    override def toString = "Integer literal"
   }
   case object STRLITKIND extends TokenKind {
     override def startsWith(prefix: String) = !(prefix contains "\n")
     override def matches(value: String)     = this startsWith value
+    override def toString = "String literal"
   }
 
   case class KeyName(override val value: String, override val pos: Position)
