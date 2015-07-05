@@ -95,9 +95,9 @@ object Parser extends Pipeline[Iterator[Token], Script] {
         }
       }
 
-    def maybeEatKeyPress(): Option[KeyPress] = eat(KEYNAMEKIND, NEWLINE) { maybeKeyName =>
+    def maybeEatKeyName(): Option[KeyName] = eat(KEYNAMEKIND, NEWLINE) { maybeKeyName =>
         maybeKeyName match {
-          case keyName: KeyName => Some(KeyPress(keyName))
+          case keyName: KeyName => Some(keyName)
           case _                => None
         }
       }
@@ -105,16 +105,16 @@ object Parser extends Pipeline[Iterator[Token], Script] {
     def parseStatement(): Option[Statement] = eat(BEGIN_STATEMENT_TOKEN_KINDS.toList:_*) { token => token match {
           case OfKind(NEWLINE)        => None
           case keyName: KeyName       => Some(KeyPress(keyName))
-          case OfKind(ALT)            => Some(Alt(maybeEatKeyPress(), token.pos))
-          case OfKind(ALT_SHIFT)      => Some(AltShift(maybeEatKeyPress(), token.pos))
+          case OfKind(ALT)            => Some(Alt(maybeEatKeyName(), token.pos))
+          case OfKind(ALT_SHIFT)      => Some(AltShift(maybeEatKeyName(), token.pos))
           case OfKind(ALT_TAB)        => Some(AltTab(token.pos))
-          case OfKind(COMMAND)        => Some(Command(maybeEatKeyPress(), token.pos))
-          case OfKind(COMMAND_OPTION) => Some(CommandOption(maybeEatKeyPress(), token.pos))
-          case OfKind(CONTROL)        => Some(Ctrl(maybeEatKeyPress(), token.pos))
-          case OfKind(CTRL_ALT)       => Some(CtrlAlt(maybeEatKeyPress(), token.pos))
-          case OfKind(CTRL_SHIFT)     => Some(CtrlShift(maybeEatKeyPress(), token.pos))
-          case OfKind(SHIFT)          => Some(Shift(maybeEatKeyPress(), token.pos))
-          case OfKind(SUPER)          => Some(Super(maybeEatKeyPress(), token.pos))
+          case OfKind(COMMAND)        => Some(Command(maybeEatKeyName(), token.pos))
+          case OfKind(COMMAND_OPTION) => Some(CommandOption(maybeEatKeyName(), token.pos))
+          case OfKind(CONTROL)        => Some(Ctrl(maybeEatKeyName(), token.pos))
+          case OfKind(CTRL_ALT)       => Some(CtrlAlt(maybeEatKeyName(), token.pos))
+          case OfKind(CTRL_SHIFT)     => Some(CtrlShift(maybeEatKeyName(), token.pos))
+          case OfKind(SHIFT)          => Some(Shift(maybeEatKeyName(), token.pos))
+          case OfKind(SUPER)          => Some(Super(maybeEatKeyName(), token.pos))
           case OfKind(DELAY)          => eatIntLit    { intLit    => Delay(intLit) }
           case OfKind(REPEAT)         => eatIntLit    { intLit    => Repeat(intLit) }
           case OfKind(STRING)         => eatStringLit { stringLit => TypeString(stringLit) }

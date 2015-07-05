@@ -21,11 +21,11 @@ import util.Context
 import util.Pipeline
 
 import Trees._
+import lang.Tokens.KeyName
 
 object Printer {
 
-  private def keyPressOptionToString(key: Option[KeyPress]): String =
-    key map { " " + _.keyName.value } getOrElse ""
+  private def keyNameOptionToString(key: Option[KeyName]): String = key map { " " + _.value } getOrElse ""
 
   def prettyPrint(script: Script): String =
     (script.defaultDelay map { tree => s"DEFAULT_DELAY ${tree.milliseconds.value}\n" } getOrElse "") +
@@ -33,16 +33,16 @@ object Printer {
       statement match {
         case KeyPress(keyName) => keyName.value
 
-        case Alt(key, _)           => "ALT"            + keyPressOptionToString(key)
-        case AltShift(key, _)      => "ALT-SHIFT"      + keyPressOptionToString(key)
+        case Alt(key, _)           => "ALT"            + keyNameOptionToString(key)
+        case AltShift(key, _)      => "ALT-SHIFT"      + keyNameOptionToString(key)
         case AltTab( _)            => "ALT-TAB"
-        case Command(key, _)       => "COMMAND"        + keyPressOptionToString(key)
-        case CommandOption(key, _) => "COMMAND-OPTION" + keyPressOptionToString(key)
-        case Ctrl(key, _)          => "CTRL"           + keyPressOptionToString(key)
-        case CtrlAlt(key, _)       => "CTRL-ALT"       + keyPressOptionToString(key)
-        case CtrlShift(key, _)     => "CTRL-SHIFT"     + keyPressOptionToString(key)
-        case Shift(key, _)         => "SHIFT"          + keyPressOptionToString(key)
-        case Super(key, _)         => "WINDOWS"        + keyPressOptionToString(key)
+        case Command(key, _)       => "COMMAND"        + keyNameOptionToString(key)
+        case CommandOption(key, _) => "COMMAND-OPTION" + keyNameOptionToString(key)
+        case Ctrl(key, _)          => "CTRL"           + keyNameOptionToString(key)
+        case CtrlAlt(key, _)       => "CTRL-ALT"       + keyNameOptionToString(key)
+        case CtrlShift(key, _)     => "CTRL-SHIFT"     + keyNameOptionToString(key)
+        case Shift(key, _)         => "SHIFT"          + keyNameOptionToString(key)
+        case Super(key, _)         => "WINDOWS"        + keyNameOptionToString(key)
 
         case Delay(milliseconds) => "DELAY "  + milliseconds.value
         case Repeat(times)       => "REPEAT " + times.value

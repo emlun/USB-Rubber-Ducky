@@ -41,16 +41,16 @@ object Trees {
 
   case class KeyPress(keyName: KeyName) extends PositionedBy(keyName) with Statement
 
-  case class Alt(key: Option[KeyPress],           pos: Position) extends Statement
-  case class AltShift(key: Option[KeyPress],      pos: Position) extends Statement
-  case class AltTab(                              pos: Position) extends Statement
-  case class Command(key: Option[KeyPress],       pos: Position) extends Statement
-  case class CommandOption(key: Option[KeyPress], pos: Position) extends Statement
-  case class Ctrl(key: Option[KeyPress],          pos: Position) extends Statement
-  case class CtrlAlt(key: Option[KeyPress],       pos: Position) extends Statement
-  case class CtrlShift(key: Option[KeyPress],     pos: Position) extends Statement
-  case class Shift(key: Option[KeyPress],         pos: Position) extends Statement
-  case class Super(key: Option[KeyPress],         pos: Position) extends Statement
+  case class Alt(key: Option[KeyName],           pos: Position) extends Statement
+  case class AltShift(key: Option[KeyName],      pos: Position) extends Statement
+  case class AltTab(                             pos: Position) extends Statement
+  case class Command(key: Option[KeyName],       pos: Position) extends Statement
+  case class CommandOption(key: Option[KeyName], pos: Position) extends Statement
+  case class Ctrl(key: Option[KeyName],          pos: Position) extends Statement
+  case class CtrlAlt(key: Option[KeyName],       pos: Position) extends Statement
+  case class CtrlShift(key: Option[KeyName],     pos: Position) extends Statement
+  case class Shift(key: Option[KeyName],         pos: Position) extends Statement
+  case class Super(key: Option[KeyName],         pos: Position) extends Statement
 
   case class Delay(milliseconds: IntLit)  extends PositionedBy(milliseconds) with Statement
   case class Repeat(times: IntLit)        extends PositionedBy(times) with Statement

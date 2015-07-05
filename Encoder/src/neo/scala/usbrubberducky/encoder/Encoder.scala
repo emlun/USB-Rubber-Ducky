@@ -123,47 +123,47 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
           })
 
         case Ctrl(None, _)                              => encodeModifierKeypress("KEY_LEFT_CTRL")
-        case Ctrl(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_CTRL")
+        case Ctrl(Some(KeyName(value, _)), _) => encodeModifiedKeypress(value, "MODIFIERKEY_CTRL")
 
         case Alt(None, _)                              => encodeModifierKeypress("KEY_LEFT_ALT")
-        case Alt(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_ALT")
+        case Alt(Some(KeyName(value, _)), _) => encodeModifiedKeypress(value, "MODIFIERKEY_ALT")
 
         case Shift(None, _)                              => encodeModifierKeypress("KEY_LEFT_SHIFT")
-        case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_SHIFT")
+        case Shift(Some(KeyName(value, _)), _) => encodeModifiedKeypress(value, "MODIFIERKEY_SHIFT")
 
         case CtrlAlt(None, pos) => {
           ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
           Nil
         }
-        case CtrlAlt(Some(KeyPress(KeyName(value, _))), _) =>
+        case CtrlAlt(Some(KeyName(value, _)), _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_CTRL", "MODIFIERKEY_ALT")
 
         case CtrlShift(None, pos) => {
           ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
           Nil
         }
-        case CtrlShift(Some(KeyPress(KeyName(value, _))), _) =>
+        case CtrlShift(Some(KeyName(value, _)), _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_CTRL", "MODIFIERKEY_SHIFT")
 
         case CommandOption(None, pos) => {
           ctx.reporter.warn("COMMAND-OPTION-nothing does nothing.", pos)
           Nil
         }
-        case CommandOption(Some(KeyPress(KeyName(value, _))), _) =>
+        case CommandOption(Some(KeyName(value, _)), _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI", "MODIFIERKEY_ALT")
 
         case AltShift(None, _) =>
           encodeModifiedKeypress("LEFT_ALT", "MODIFIERKEY_LEFT_ALT", "MODIFIERKEY_SHIFT")
-        case AltShift(Some(KeyPress(KeyName(value, _))), _) =>
+        case AltShift(Some(KeyName(value, _)), _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_ALT", "MODIFIERKEY_SHIFT")
 
         case AltTab(_) => encodeModifiedKeypress("TAB", "MODIFIERKEY_LEFT_ALT")
 
         case Super(None, _) => encodeModifierKeypress("MODIFIERKEY_LEFT_GUI")
-        case Super(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
+        case Super(Some(KeyName(value, _)), _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
 
         case Command(None, _) => encodeModifierKeypress("KEY_COMMAND")
-        case Command(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
+        case Command(Some(KeyName(value, _)), _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
       }) ++: (statement match {
         case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) | CtrlShift(Some(_), _) | CommandOption(Some(_), _) | AltShift(_,_) | AltTab(_) | Super(_,_) | Command(_,_) => defaultDelayBytes
         case _ => Nil
