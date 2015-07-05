@@ -28,6 +28,10 @@ import util.Pipeline
 object NewEncoder extends Pipeline[Script, List[Byte]] {
 
   // Original Author:Jason Appelbaum Jason@Hak5.org
+  private def charToBytes(keyboard: Properties, layout: Properties)(c: Char): List[Byte] =
+    codeToBytes(keyboard, layout)(charToCode(c))
+
+  // Original Author:Jason Appelbaum Jason@Hak5.org
   private def charToCode(c: Char): String = (c match {
       case _ if c < 128 => "ASCII"
       case _ if c < 256 => "ISO_8859_1"
@@ -77,7 +81,7 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
       case TypeString(StringLit(value, _)) =>
         value.flatMap({ c: Char =>
-          val bytes = codeToBytes(ctx.keyboard, ctx.layout)(charToCode(c))
+          val bytes = charToBytes(ctx.keyboard, ctx.layout)(c)
           bytes ++: (if(bytes.length % 2 == 0) Nil else List(0x00: Byte))
         }) ++:
         defaultDelayBytes
