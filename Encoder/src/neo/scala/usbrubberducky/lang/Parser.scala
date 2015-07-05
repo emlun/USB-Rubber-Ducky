@@ -85,6 +85,16 @@ object Parser extends Pipeline[Iterator[Token], Script] {
         }
       }
 
+    def eatPosIntLit[T](andThen: (PosIntLit => T)): Option[T] = eat(POSINTLITKIND) { token =>
+        token match {
+          case intLit: PosIntLit => Some(andThen(intLit))
+          case _ => {
+            ctx.reporter.error(s"Expected positive integer literal, got ${token.kind}", token.pos)
+            None
+          }
+        }
+      }
+
     def eatStringLit[T](andThen: (StringLit => T)): Option[T] = eat(STRLITKIND) { token =>
         token match {
           case stringLit: StringLit => Some(andThen(stringLit))

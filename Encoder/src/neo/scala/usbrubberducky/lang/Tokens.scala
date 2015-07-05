@@ -87,6 +87,11 @@ object Tokens {
     override def matches(value: String)     = value matches "0|[1-9][0-9]*"
     override def toString = "Integer literal"
   }
+  case object POSINTLITKIND extends TokenKind {
+    override def startsWith(prefix: String) = prefix.isEmpty || (prefix matches "[1-9][0-9]*")
+    override def matches(value: String)     = value matches "[1-9][0-9]*"
+    override def toString = "Positive integer literal"
+  }
   case object STRLITKIND extends TokenKind {
     override def startsWith(prefix: String) = !(prefix contains "\n")
     override def matches(value: String)     = this startsWith value
@@ -98,6 +103,11 @@ object Tokens {
 
   case class IntLit(override val value: Int, override val pos: Position)
     extends ValueToken[Int](INTLITKIND, pos)
+
+  case class PosIntLit(override val value: Int, override val pos: Position)
+    extends ValueToken[Int](POSINTLITKIND, pos) {
+      if(value < 1) throw new IllegalArgumentException(s"PosIntLit value must be positive (got $value).")
+    }
 
   case class StringLit(override val value: String, override val pos: Position)
     extends ValueToken[String](STRLITKIND, pos)
