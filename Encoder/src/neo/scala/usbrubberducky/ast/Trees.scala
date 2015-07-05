@@ -19,6 +19,7 @@ package ast
 
 import util.Position
 import util.Positioned
+import util.PositionedBy
 import util.NoPosition
 
 import lang.Tokens
@@ -28,30 +29,31 @@ import Tokens.StringLit
 
 object Trees {
 
-  sealed abstract class Tree(pos: Position) extends Positioned(pos)
+  sealed trait Tree extends Positioned
 
-  case class Script(defaultDelay: Option[DefaultDelay], statements: List[Statement])
-    extends Tree(NoPosition)
+  case class Script(defaultDelay: Option[DefaultDelay], statements: List[Statement]) extends Tree {
+    override def pos = NoPosition
+  }
 
-  case class DefaultDelay(milliseconds: IntLit) extends Tree(milliseconds.pos)
+  case class DefaultDelay(milliseconds: IntLit) extends PositionedBy(milliseconds) with Tree
 
-  sealed abstract class Statement(pos: Position) extends Tree(pos)
+  sealed trait Statement extends Tree
 
-  case class KeyPress(keyName: KeyName) extends Statement(keyName.pos)
+  case class KeyPress(keyName: KeyName) extends PositionedBy(keyName) with Statement
 
-  case class Alt(key: Option[KeyPress],           override val pos: Position) extends Statement(pos)
-  case class AltShift(key: Option[KeyPress],      override val pos: Position) extends Statement(pos)
-  case class AltTab(                              override val pos: Position) extends Statement(pos)
-  case class Command(key: Option[KeyPress],       override val pos: Position) extends Statement(pos)
-  case class CommandOption(key: Option[KeyPress], override val pos: Position) extends Statement(pos)
-  case class Ctrl(key: Option[KeyPress],          override val pos: Position) extends Statement(pos)
-  case class CtrlAlt(key: Option[KeyPress],       override val pos: Position) extends Statement(pos)
-  case class CtrlShift(key: Option[KeyPress],     override val pos: Position) extends Statement(pos)
-  case class Shift(key: Option[KeyPress],         override val pos: Position) extends Statement(pos)
-  case class Super(key: Option[KeyPress],         override val pos: Position) extends Statement(pos)
+  case class Alt(key: Option[KeyPress],           pos: Position) extends Statement
+  case class AltShift(key: Option[KeyPress],      pos: Position) extends Statement
+  case class AltTab(                              pos: Position) extends Statement
+  case class Command(key: Option[KeyPress],       pos: Position) extends Statement
+  case class CommandOption(key: Option[KeyPress], pos: Position) extends Statement
+  case class Ctrl(key: Option[KeyPress],          pos: Position) extends Statement
+  case class CtrlAlt(key: Option[KeyPress],       pos: Position) extends Statement
+  case class CtrlShift(key: Option[KeyPress],     pos: Position) extends Statement
+  case class Shift(key: Option[KeyPress],         pos: Position) extends Statement
+  case class Super(key: Option[KeyPress],         pos: Position) extends Statement
 
-  case class Delay(milliseconds: IntLit)  extends Statement(milliseconds.pos)
-  case class Repeat(times: IntLit)        extends Statement(times.pos)
-  case class TypeString(value: StringLit) extends Statement(value.pos)
+  case class Delay(milliseconds: IntLit)  extends PositionedBy(milliseconds) with Statement
+  case class Repeat(times: IntLit)        extends PositionedBy(times) with Statement
+  case class TypeString(value: StringLit) extends PositionedBy(value) with Statement
 
 }

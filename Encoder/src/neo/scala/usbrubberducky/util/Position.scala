@@ -36,5 +36,9 @@ object NoPosition extends Position(0, 0, "") {
   override def longString = toString
 }
 
-class Positioned(val pos: Position)
-abstract class PositionedBy(posProvider: Positioned) extends Positioned(posProvider.pos)
+trait Positioned {
+  def pos: Position
+}
+abstract class PositionedBy(posProvider: Positioned) extends Positioned {
+  override def pos = posProvider.pos
+}
