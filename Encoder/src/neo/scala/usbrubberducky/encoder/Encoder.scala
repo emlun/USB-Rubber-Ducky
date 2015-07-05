@@ -64,6 +64,34 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
       case _                        => Integer.parseInt(str).toByte
     }
 
+  private def strInstrToByte(keyboard: Properties, layout: Properties)(instruction: String): Byte = {
+    val recurse: (String => Byte) = strInstrToByte(keyboard, layout)
+
+    if(keyboard.getProperty("KEY_" + instruction) != null) {
+      strToByte(keyboard.getProperty("KEY_" + instruction))
+    } else instruction match {
+      case "ESCAPE"         => recurse("ESC")
+      case "DEL"            => recurse("DELETE")
+      case "BREAK"          => recurse("PAUSE")
+      case "CONTROL"        => recurse("CTRL")
+      case "DOWNARROW"      => recurse("DOWN")
+      case "UPARROW"        => recurse("UP")
+      case "LEFTARROW"      => recurse("LEFT")
+      case "RIGHTARROW"     => recurse("RIGHT")
+      case "MENU"           => recurse("APP")
+      case "WINDOWS"        => recurse("GUI")
+      case "PLAY" | "PAUSE" => recurse("MEDIA_PLAY_PAUSE")
+      case "STOP"           => recurse("MEDIA_STOP")
+      case "MUTE"           => recurse("MEDIA_MUTE")
+      case "VOLUMEUP"       => recurse("MEDIA_VOLUME_INC")
+      case "VOLUMEDOWN"     => recurse("MEDIA_VOLUME_DEC")
+      case "SCROLLLOCK"     => recurse("SCROLL_LOCK")
+      case "NUMLOCK"        => recurse("NUM_LOCK")
+      case "CAPSLOCK"       => recurse("CAPS_LOCK")
+      case _                => charToBytes(keyboard, layout)(instruction.charAt(0)).head
+    }
+  }
+
   private def encodeDelay(milliseconds: Int): List[Byte] =
     List.fill(milliseconds / 255)(List(0x00.toByte, 0xFF.toByte)).flatten ++:
     (milliseconds % 255 match {
@@ -85,6 +113,14 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
           bytes ++: (if(bytes.length % 2 == 0) Nil else List(0x00: Byte))
         }) ++:
         defaultDelayBytes
+
+      case Ctrl(None, _) =>
+        List(strToByte(ctx.keyboard.getProperty("KEY_LEFT_CTRL")), 0x00: Byte) ++: defaultDelayBytes
+      case Ctrl(Some(KeyPress(KeyName(value, _))), _) =>
+        List(
+          strInstrToByte(ctx.keyboard, ctx.layout)(value),
+          strToByte(ctx.keyboard.getProperty("MODIFIERKEY_CTRL"))
+        ) ++: defaultDelayBytes
     }
   }
 
