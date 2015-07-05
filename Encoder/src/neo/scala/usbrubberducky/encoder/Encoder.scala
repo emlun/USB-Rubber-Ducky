@@ -101,9 +101,11 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
       }) ++:
       Nil
 
-    def encodeModifiedKeypress(modifierName: String, keyName: String) = List(
+    def encodeModifiedKeypress(keyName: String, modifierNames: String*) = List(
         strInstrToByte(keyName),
-        strToByte(ctx.keyboard.getProperty(modifierName))
+        modifierNames.foldLeft(0: Byte) { (byte: Byte, modifierName: String) =>
+          (byte | strToByte(ctx.keyboard.getProperty(modifierName))).toByte
+        }
       )
 
     def encodeModifierKeypress(modifierKeyName: String) =
@@ -121,26 +123,20 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
           })
 
         case Ctrl(None, _)                              => encodeModifierKeypress("KEY_LEFT_CTRL")
-        case Ctrl(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress("MODIFIERKEY_CTRL", value)
+        case Ctrl(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_CTRL")
 
         case Alt(None, _)                              => encodeModifierKeypress("KEY_LEFT_ALT")
-        case Alt(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress("MODIFIERKEY_ALT", value)
+        case Alt(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_ALT")
 
         case Shift(None, _)                              => encodeModifierKeypress("KEY_LEFT_SHIFT")
-        case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress("MODIFIERKEY_SHIFT", value)
+        case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_SHIFT")
 
         case CtrlAlt(None, pos) => {
           ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
           Nil
         }
         case CtrlAlt(Some(KeyPress(KeyName(value, _))), _) =>
-          List(
-            strInstrToByte(value),
-            (
-              strToByte(ctx.keyboard.getProperty("MODIFIERKEY_CTRL")) |
-              strToByte(ctx.keyboard.getProperty("MODIFIERKEY_ALT"))
-            ).toByte
-          )
+          encodeModifiedKeypress(value, "MODIFIERKEY_CTRL", "MODIFIERKEY_ALT")
       }) ++: (statement match {
         case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) => defaultDelayBytes
         case _ => Nil
