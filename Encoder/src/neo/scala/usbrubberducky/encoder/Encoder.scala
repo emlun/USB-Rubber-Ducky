@@ -131,6 +131,9 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
       case Alt(None, _)                              => encodeModifier("KEY_LEFT_ALT")
       case Alt(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_ALT", value)
+
+      case Shift(None, _)                              => encodeModifier("KEY_LEFT_SHIFT")
+      case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_SHIFT", value)
     }
   }
 
