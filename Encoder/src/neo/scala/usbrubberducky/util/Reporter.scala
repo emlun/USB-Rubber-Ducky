@@ -21,7 +21,8 @@ class Reporter(
     val debug: Boolean = false,
     val info: Boolean = true,
     val warn: Boolean = true,
-    val error: Boolean = true
+    val error: Boolean = true,
+    val println: (Any => Unit) = Console.err.println
   ) {
 
   private var _hasErrors = false
