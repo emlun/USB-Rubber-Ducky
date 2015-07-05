@@ -84,11 +84,18 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
 
     val argument = command.kind match {
         case STRING                        => StringLit(argumentString, argumentPos)
-        case DELAY | DEFAULTDELAY | REPEAT =>
+        case DELAY | DEFAULTDELAY =>
           if(INTLITKIND matches argumentString.trim) {
             IntLit(argumentString.trim.toInt, argumentPos)
           } else {
             ctx.reporter.error("Bad integer literal: " + argumentString, argumentPos)
+            new Token(BAD, argumentPos)
+          }
+        case REPEAT =>
+          if(POSINTLITKIND matches argumentString.trim) {
+            PosIntLit(argumentString.trim.toInt, argumentPos)
+          } else {
+            ctx.reporter.error("Bad positive integer literal: " + argumentString, argumentPos)
             new Token(BAD, argumentPos)
           }
         case _                             => KeyName(argumentString.trim, argumentPos)

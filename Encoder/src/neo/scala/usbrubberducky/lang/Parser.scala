@@ -85,9 +85,9 @@ object Parser extends Pipeline[Iterator[Token], Script] {
         }
       }
 
-    def eatPosIntLit[T](andThen: (PosIntLit => T)): Option[T] = eat(POSINTLITKIND) { token =>
+    def eatPosIntLit(): Option[PosIntLit] = eat(POSINTLITKIND) { token =>
         token match {
-          case intLit: PosIntLit => Some(andThen(intLit))
+          case intLit: PosIntLit => Some(intLit)
           case _ => {
             ctx.reporter.error(s"Expected positive integer literal, got ${token.kind}", token.pos)
             None
@@ -112,16 +112,14 @@ object Parser extends Pipeline[Iterator[Token], Script] {
         }
       }
 
-    def maybeEatRepeat(): Option[Repeat] = currentToken() match {
+    def maybeEatRepeat(): PosIntLit = (currentToken() match {
         case Some(OfKind(NEWLINE)) => {
           readToken()
-          maybeEatRepeat()
+          Some(maybeEatRepeat())
         }
-        case Some(OfKind(REPEAT)) => eat(REPEAT) { repeatToken =>
-            eatIntLit { times => Repeat(times) }
-          }
+        case Some(OfKind(REPEAT)) => eat(REPEAT) { _ => eatPosIntLit() }
         case _ => None
-      }
+      }) getOrElse PosIntLit(1, NoPosition)
 
     def parseStatement(): Option[Statement] = eat(BEGIN_STATEMENT_TOKEN_KINDS.toList:_*) { token => token match {
           case OfKind(NEWLINE)        => None

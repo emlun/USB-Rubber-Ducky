@@ -46,7 +46,10 @@ object Printer {
 
         case Delay(milliseconds, _) => "DELAY "  + milliseconds.value
         case TypeString(value, _)   => "STRING " + value.value
-      }) + (statement.repeat map { "\nREPEAT " + _.times.value } getOrElse "")
+      }) + (statement.times.value match {
+        case 1 => ""
+        case times => "\nREPEAT " + times
+      })
     } mkString "\n")
 
 }
