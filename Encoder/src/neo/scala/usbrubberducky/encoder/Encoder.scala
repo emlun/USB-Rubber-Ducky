@@ -165,8 +165,8 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
         case Command(None, _, _) => encodeModifierKeypress("KEY_COMMAND")
         case Command(Some(KeyName(value, _)), _, _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
       }) ++: (statement match {
-        case TypeString(_,_) | Ctrl(_,_,_) | Alt(_,_,_) | Shift(_,_,_) | CtrlAlt(Some(_),_,_) | CtrlShift(Some(_), _,_) | CommandOption(Some(_), _,_) | AltShift(_,_,_) | AltTab(_,_) | Super(_,_,_) | Command(_,_,_) => defaultDelayBytes
-        case _ => Nil
+        case Delay(_,_) => Nil
+        case _          => defaultDelayBytes
       })
     }
 
