@@ -158,8 +158,11 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
           encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_ALT", "MODIFIERKEY_SHIFT")
 
         case AltTab(_) => encodeModifiedKeypress("TAB", "MODIFIERKEY_LEFT_ALT")
+
+        case Super(None, _) => encodeModifierKeypress("MODIFIERKEY_LEFT_GUI")
+        case Super(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
       }) ++: (statement match {
-        case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) | CtrlShift(Some(_), _) | CommandOption(Some(_), _) | AltShift(_,_) | AltTab(_) => defaultDelayBytes
+        case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) | CtrlShift(Some(_), _) | CommandOption(Some(_), _) | AltShift(_,_) | AltTab(_) | Super(_,_) => defaultDelayBytes
         case _ => Nil
       })
     }
