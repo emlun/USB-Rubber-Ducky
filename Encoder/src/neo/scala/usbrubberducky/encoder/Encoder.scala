@@ -100,9 +100,21 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     }) ++:
     Nil
 
+  private def encodeModifiedKeypress(keyboard: Properties, layout: Properties, defaultDelayBytes: List[Byte])
+                                    (modifierName: String, keyName: String) = List(
+      strInstrToByte(keyboard, layout)(keyName),
+      strToByte(keyboard.getProperty(modifierName))
+    ) ++: defaultDelayBytes
+
+  private def encodeModifierKeypress(keyboard: Properties, layout: Properties, defaultDelayBytes: List[Byte])
+                                    (modifierKeyName: String) =
+    List(strToByte(keyboard.getProperty(modifierKeyName)), 0x00: Byte) ++: defaultDelayBytes
+
   private def encodeStatement(ctx: Context, defaultDelay: Option[DefaultDelay])
                              (statement: Statement): List[Byte] = {
     val defaultDelayBytes = defaultDelay map { delay => encodeDelay(delay.milliseconds.value) } getOrElse Nil
+    val encodeModified = encodeModifiedKeypress(ctx.keyboard, ctx.layout, defaultDelayBytes) _
+    val encodeModifier = encodeModifierKeypress(ctx.keyboard, ctx.layout, defaultDelayBytes) _
 
     statement match {
       case Delay(IntLit(milliseconds, _)) => encodeDelay(milliseconds)
@@ -114,13 +126,8 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
         }) ++:
         defaultDelayBytes
 
-      case Ctrl(None, _) =>
-        List(strToByte(ctx.keyboard.getProperty("KEY_LEFT_CTRL")), 0x00: Byte) ++: defaultDelayBytes
-      case Ctrl(Some(KeyPress(KeyName(value, _))), _) =>
-        List(
-          strInstrToByte(ctx.keyboard, ctx.layout)(value),
-          strToByte(ctx.keyboard.getProperty("MODIFIERKEY_CTRL"))
-        ) ++: defaultDelayBytes
+      case Ctrl(None, _)                              => encodeModifier("KEY_LEFT_CTRL")
+      case Ctrl(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_CTRL", value)
     }
   }
 
