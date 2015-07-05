@@ -32,19 +32,27 @@ class ComparisonTest extends FunSpec with Matchers with TestHelpers {
 
   describe("The new encoder") {
 
-    it("produces the same output as the old encoder.") {
-      val inputFile = "src/test/resources/helloworld.ducky"
+    describe("produces the same output as the old encoder") {
 
-      val oldBytes: List[Byte] = {
-        val enc = new Encoder(inputFile, null, null)
-        enc.setup()
-        enc.encode().asScala.map(Byte.unbox(_)).toList
+      "src/test/resources/dev-test-with-defaultdelay.ducky" ::
+      "src/test/resources/dev-test-without-defaultdelay.ducky" ::
+      Nil foreach { inputFile =>
+
+        it(s"on $inputFile") {
+          val oldBytes: List[Byte] = {
+            val enc = new Encoder(inputFile, null, null)
+            enc.setup()
+            enc.encode().asScala.map(Byte.unbox(_)).toList
+          }
+
+          val newBytes: List[Byte] =
+            (Lexer andThen Parser andThen NewEncoder).run(newContext)(Source fromFile inputFile)
+
+          newBytes should be (oldBytes)
+        }
+
       }
 
-      val newBytes: List[Byte] =
-        (Lexer andThen Parser andThen NewEncoder).run(newContext)(Source fromFile inputFile)
-
-      newBytes should be (oldBytes)
     }
 
   }
