@@ -15,3 +15,4 @@ REM COMMAND-OPTION // Hangs old encoder due to infinite loop
 COMMAND-OPTION a
 ALT-SHIFT
 ALT-SHIFT a
+ALT-TAB
