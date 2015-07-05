@@ -27,134 +27,127 @@ import util.Pipeline
 
 object NewEncoder extends Pipeline[Script, List[Byte]] {
 
-  // Original Author:Jason Appelbaum Jason@Hak5.org
-  private def charToBytes(keyboard: Properties, layout: Properties)(c: Char): List[Byte] =
-    codeToBytes(keyboard, layout)(charToCode(c))
-
-  // Original Author:Jason Appelbaum Jason@Hak5.org
-  private def charToCode(c: Char): String = (c match {
-      case _ if c < 128 => "ASCII"
-      case _ if c < 256 => "ISO_8859_1"
-      case _            => "UNICODE"
-    }) + "_" + Integer.toHexString(c).toUpperCase
-
-  // Original Author:Jason Appelbaum Jason@Hak5.org
-  private def codeToBytes(keyboard: Properties, layout: Properties)(str: String): List[Byte] = {
-    if(layout.getProperty(str) != null) {
-      val keys: List[String] = (layout.getProperty(str).split(",") map { _.trim }).toList
-      keys map { key =>
-          if(keyboard.getProperty(key) != null) {
-            strToByte(keyboard.getProperty(key).trim())
-          } else if(layout.getProperty(key) != null) {
-            strToByte(layout.getProperty(key).trim())
-          } else {
-            println("Key not found: " + key)
-            0x00: Byte
-          }
-        }
-    } else {
-      println("Char not found:"+str);
-      List(0x00: Byte)
-    }
-  }
-
-  // Original Author:Jason Appelbaum Jason@Hak5.org
-  private def strToByte(str: String): Byte = str match {
-      case _ if str startsWith "0x" => Integer.parseInt(str.substring(2), 16).toByte
-      case _                        => Integer.parseInt(str).toByte
-    }
-
-  private def strInstrToByte(keyboard: Properties, layout: Properties)(instruction: String): Byte = {
-    val recurse: (String => Byte) = strInstrToByte(keyboard, layout)
-
-    if(keyboard.getProperty("KEY_" + instruction) != null) {
-      strToByte(keyboard.getProperty("KEY_" + instruction))
-    } else instruction match {
-      case "ESCAPE"         => recurse("ESC")
-      case "DEL"            => recurse("DELETE")
-      case "BREAK"          => recurse("PAUSE")
-      case "CONTROL"        => recurse("CTRL")
-      case "DOWNARROW"      => recurse("DOWN")
-      case "UPARROW"        => recurse("UP")
-      case "LEFTARROW"      => recurse("LEFT")
-      case "RIGHTARROW"     => recurse("RIGHT")
-      case "MENU"           => recurse("APP")
-      case "WINDOWS"        => recurse("GUI")
-      case "PLAY" | "PAUSE" => recurse("MEDIA_PLAY_PAUSE")
-      case "STOP"           => recurse("MEDIA_STOP")
-      case "MUTE"           => recurse("MEDIA_MUTE")
-      case "VOLUMEUP"       => recurse("MEDIA_VOLUME_INC")
-      case "VOLUMEDOWN"     => recurse("MEDIA_VOLUME_DEC")
-      case "SCROLLLOCK"     => recurse("SCROLL_LOCK")
-      case "NUMLOCK"        => recurse("NUM_LOCK")
-      case "CAPSLOCK"       => recurse("CAPS_LOCK")
-      case _                => charToBytes(keyboard, layout)(instruction.charAt(0)).head
-    }
-  }
-
-  private def encodeDelay(milliseconds: Int): List[Byte] =
-    List.fill(milliseconds / 255)(List(0x00.toByte, 0xFF.toByte)).flatten ++:
-    (milliseconds % 255 match {
-      case 0         => Nil
-      case remainder => List(0x00.toByte, remainder.toByte)
-    }) ++:
-    Nil
-
-  private def encodeModifiedKeypress(keyboard: Properties, layout: Properties)
-                                    (modifierName: String, keyName: String) = List(
-      strInstrToByte(keyboard, layout)(keyName),
-      strToByte(keyboard.getProperty(modifierName))
-    )
-
-  private def encodeModifierKeypress(keyboard: Properties, layout: Properties)
-                                    (modifierKeyName: String) =
-    List(strToByte(keyboard.getProperty(modifierKeyName)), 0x00: Byte)
-
-  private def encodeStatement(ctx: Context, defaultDelay: Option[DefaultDelay])
-                             (statement: Statement): List[Byte] = {
-    val defaultDelayBytes = defaultDelay map { delay => encodeDelay(delay.milliseconds.value) } getOrElse Nil
-    val encodeModified = encodeModifiedKeypress(ctx.keyboard, ctx.layout) _
-    val encodeModifier = encodeModifierKeypress(ctx.keyboard, ctx.layout) _
-
-    (statement match {
-      case Delay(IntLit(milliseconds, _)) => encodeDelay(milliseconds)
-
-      case TypeString(StringLit(value, _)) =>
-        value.flatMap({ c: Char =>
-          val bytes = charToBytes(ctx.keyboard, ctx.layout)(c)
-          bytes ++: (if(bytes.length % 2 == 0) Nil else List(0x00: Byte))
-        })
-
-      case Ctrl(None, _)                              => encodeModifier("KEY_LEFT_CTRL")
-      case Ctrl(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_CTRL", value)
-
-      case Alt(None, _)                              => encodeModifier("KEY_LEFT_ALT")
-      case Alt(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_ALT", value)
-
-      case Shift(None, _)                              => encodeModifier("KEY_LEFT_SHIFT")
-      case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_SHIFT", value)
-
-      case CtrlAlt(None, pos) => {
-        ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
-        Nil
-      }
-      case CtrlAlt(Some(KeyPress(KeyName(value, _))), _) =>
-        List(
-          strInstrToByte(ctx.keyboard, ctx.layout)(value),
-          (
-            strToByte(ctx.keyboard.getProperty("MODIFIERKEY_CTRL")) |
-            strToByte(ctx.keyboard.getProperty("MODIFIERKEY_ALT"))
-          ).toByte
-        )
-    }) ++: (statement match {
-      case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) => defaultDelayBytes
-      case _ => Nil
-    })
-  }
-
   override def run(ctx: Context)(script: Script) = {
 
-    val bytes: List[Byte] = script.statements flatMap encodeStatement(ctx, script.defaultDelay) _
+    // Original Author:Jason Appelbaum Jason@Hak5.org
+    def charToBytes(c: Char): List[Byte] = codeToBytes(charToCode(c))
+
+    // Original Author:Jason Appelbaum Jason@Hak5.org
+    def charToCode(c: Char): String = (c match {
+        case _ if c < 128 => "ASCII"
+        case _ if c < 256 => "ISO_8859_1"
+        case _            => "UNICODE"
+      }) + "_" + Integer.toHexString(c).toUpperCase
+
+    // Original Author:Jason Appelbaum Jason@Hak5.org
+    def codeToBytes(str: String): List[Byte] = {
+      if(ctx.layout.getProperty(str) != null) {
+        val keys: List[String] = (ctx.layout.getProperty(str).split(",") map { _.trim }).toList
+        keys map { key =>
+            if(ctx.keyboard.getProperty(key) != null) {
+              strToByte(ctx.keyboard.getProperty(key).trim())
+            } else if(ctx.layout.getProperty(key) != null) {
+              strToByte(ctx.layout.getProperty(key).trim())
+            } else {
+              println("Key not found: " + key)
+              0x00: Byte
+            }
+          }
+      } else {
+        println("Char not found:"+str);
+        List(0x00: Byte)
+      }
+    }
+
+    // Original Author:Jason Appelbaum Jason@Hak5.org
+    def strToByte(str: String): Byte = str match {
+        case _ if str startsWith "0x" => Integer.parseInt(str.substring(2), 16).toByte
+        case _                        => Integer.parseInt(str).toByte
+      }
+
+    def strInstrToByte(instruction: String): Byte = {
+      val recurse: (String => Byte) = strInstrToByte _
+
+      if(ctx.keyboard.getProperty("KEY_" + instruction) != null) {
+        strToByte(ctx.keyboard.getProperty("KEY_" + instruction))
+      } else instruction match {
+        case "ESCAPE"         => recurse("ESC")
+        case "DEL"            => recurse("DELETE")
+        case "BREAK"          => recurse("PAUSE")
+        case "CONTROL"        => recurse("CTRL")
+        case "DOWNARROW"      => recurse("DOWN")
+        case "UPARROW"        => recurse("UP")
+        case "LEFTARROW"      => recurse("LEFT")
+        case "RIGHTARROW"     => recurse("RIGHT")
+        case "MENU"           => recurse("APP")
+        case "WINDOWS"        => recurse("GUI")
+        case "PLAY" | "PAUSE" => recurse("MEDIA_PLAY_PAUSE")
+        case "STOP"           => recurse("MEDIA_STOP")
+        case "MUTE"           => recurse("MEDIA_MUTE")
+        case "VOLUMEUP"       => recurse("MEDIA_VOLUME_INC")
+        case "VOLUMEDOWN"     => recurse("MEDIA_VOLUME_DEC")
+        case "SCROLLLOCK"     => recurse("SCROLL_LOCK")
+        case "NUMLOCK"        => recurse("NUM_LOCK")
+        case "CAPSLOCK"       => recurse("CAPS_LOCK")
+        case _                => charToBytes(instruction.charAt(0)).head
+      }
+    }
+
+    def encodeDelay(milliseconds: Int): List[Byte] =
+      List.fill(milliseconds / 255)(List(0x00.toByte, 0xFF.toByte)).flatten ++:
+      (milliseconds % 255 match {
+        case 0         => Nil
+        case remainder => List(0x00.toByte, remainder.toByte)
+      }) ++:
+      Nil
+
+    def encodeModifiedKeypress(modifierName: String, keyName: String) = List(
+        strInstrToByte(keyName),
+        strToByte(ctx.keyboard.getProperty(modifierName))
+      )
+
+    def encodeModifierKeypress(modifierKeyName: String) =
+      List(strToByte(ctx.keyboard.getProperty(modifierKeyName)), 0x00: Byte)
+
+    def encodeStatement(statement: Statement): List[Byte] = {
+      val defaultDelayBytes = script.defaultDelay map { delay => encodeDelay(delay.milliseconds.value) } getOrElse Nil
+      (statement match {
+        case Delay(IntLit(milliseconds, _)) => encodeDelay(milliseconds)
+
+        case TypeString(StringLit(value, _)) =>
+          value.flatMap({ c: Char =>
+            val bytes = charToBytes(c)
+            bytes ++: (if(bytes.length % 2 == 0) Nil else List(0x00: Byte))
+          })
+
+        case Ctrl(None, _)                              => encodeModifierKeypress("KEY_LEFT_CTRL")
+        case Ctrl(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress("MODIFIERKEY_CTRL", value)
+
+        case Alt(None, _)                              => encodeModifierKeypress("KEY_LEFT_ALT")
+        case Alt(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress("MODIFIERKEY_ALT", value)
+
+        case Shift(None, _)                              => encodeModifierKeypress("KEY_LEFT_SHIFT")
+        case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModifiedKeypress("MODIFIERKEY_SHIFT", value)
+
+        case CtrlAlt(None, pos) => {
+          ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
+          Nil
+        }
+        case CtrlAlt(Some(KeyPress(KeyName(value, _))), _) =>
+          List(
+            strInstrToByte(value),
+            (
+              strToByte(ctx.keyboard.getProperty("MODIFIERKEY_CTRL")) |
+              strToByte(ctx.keyboard.getProperty("MODIFIERKEY_ALT"))
+            ).toByte
+          )
+      }) ++: (statement match {
+        case TypeString(_) | Ctrl(_,_) | Alt(_,_) | Shift(_,_) | CtrlAlt(Some(_),_) => defaultDelayBytes
+        case _ => Nil
+      })
+    }
+
+    val bytes: List[Byte] = script.statements flatMap encodeStatement _
 
     bytes
   }
