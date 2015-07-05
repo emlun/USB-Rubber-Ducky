@@ -17,6 +17,8 @@
 package usbrubberducky
 package encoder
 
+import java.util.Properties
+
 import ast.Trees._
 import lang.Tokens._
 import util.Context
@@ -24,6 +26,39 @@ import util.Pipeline
 
 
 object NewEncoder extends Pipeline[Script, List[Byte]] {
+
+  // Original Author:Jason Appelbaum Jason@Hak5.org
+  private def charToCode(c: Char): String = (c match {
+      case _ if c < 128 => "ASCII"
+      case _ if c < 256 => "ISO_8859_1"
+      case _            => "UNICODE"
+    }) + "_" + Integer.toHexString(c).toUpperCase
+
+  // Original Author:Jason Appelbaum Jason@Hak5.org
+  private def codeToBytes(keyboard: Properties, layout: Properties)(str: String): List[Byte] = {
+    if(layout.getProperty(str) != null) {
+      val keys: List[String] = (layout.getProperty(str).split(",") map { _.trim }).toList
+      keys map { key =>
+          if(keyboard.getProperty(key) != null) {
+            strToByte(keyboard.getProperty(key).trim())
+          } else if(layout.getProperty(key) != null) {
+            strToByte(layout.getProperty(key).trim())
+          } else {
+            println("Key not found: " + key)
+            0x00: Byte
+          }
+        }
+    } else {
+      println("Char not found:"+str);
+      List(0x00: Byte)
+    }
+  }
+
+  // Original Author:Jason Appelbaum Jason@Hak5.org
+  private def strToByte(str: String): Byte = str match {
+      case _ if str startsWith "0x" => Integer.parseInt(str.substring(2), 16).toByte
+      case _                        => Integer.parseInt(str).toByte
+    }
 
   private def encodeDelay(milliseconds: Int): List[Byte] =
     List.fill(milliseconds / 255)(List(0x00.toByte, 0xFF.toByte)).flatten ++:
@@ -39,6 +74,13 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
     statement match {
       case Delay(IntLit(milliseconds, _)) => encodeDelay(milliseconds)
+
+      case TypeString(StringLit(value, _)) =>
+        value.flatMap({ c: Char =>
+          val bytes = codeToBytes(ctx.keyboard, ctx.layout)(charToCode(c))
+          bytes ++: (if(bytes.length % 2 == 0) Nil else List(0x00: Byte))
+        }) ++:
+        defaultDelayBytes
     }
   }
 
