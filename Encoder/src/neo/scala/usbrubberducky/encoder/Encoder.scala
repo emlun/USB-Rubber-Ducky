@@ -134,6 +134,19 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
       case Shift(None, _)                              => encodeModifier("KEY_LEFT_SHIFT")
       case Shift(Some(KeyPress(KeyName(value, _))), _) => encodeModified("MODIFIERKEY_SHIFT", value)
+
+      case CtrlAlt(None, pos) => {
+        ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
+        Nil
+      }
+      case CtrlAlt(Some(KeyPress(KeyName(value, _))), _) =>
+        List(
+          strInstrToByte(ctx.keyboard, ctx.layout)(value),
+          (
+            strToByte(ctx.keyboard.getProperty("MODIFIERKEY_CTRL")) |
+            strToByte(ctx.keyboard.getProperty("MODIFIERKEY_ALT"))
+          ).toByte
+        ) ++: defaultDelayBytes
     }
   }
 

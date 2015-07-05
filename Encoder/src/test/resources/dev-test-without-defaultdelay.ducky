@@ -6,3 +6,5 @@ ALT
 ALT a
 SHIFT
 SHIFT a
+REM CTRL-ALT // Hangs old encoder due to infinite loop
+CTRL-ALT a
