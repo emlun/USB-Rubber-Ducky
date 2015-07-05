@@ -31,7 +31,9 @@ import lang.Parser
 import util.Context
 import util.Pipeline
 
-class PrinterSpec extends FunSpec with Matchers {
+import test._
+
+class PrinterSpec extends FunSpec with Matchers with TestHelpers {
 
   private object StringToSource extends Pipeline[String, Source] {
     override def run(ctx: Context)(s: String) = Source fromString s
@@ -52,7 +54,7 @@ class PrinterSpec extends FunSpec with Matchers {
           }
         } andThen StringToSource andThen Lexer andThen Parser andThen PrettyPrinter
 
-      val secondOutput = pipeline.run(new Context())(Source fromFile input)
+      val secondOutput = pipeline.run(newContext)(Source fromFile input)
 
       secondOutput should be (firstOutput)
     }

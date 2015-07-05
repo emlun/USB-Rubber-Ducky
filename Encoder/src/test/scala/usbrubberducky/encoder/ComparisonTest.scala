@@ -26,7 +26,9 @@ import org.scalatest.Matchers
 import lang.{Lexer,Parser}
 import util.Context
 
-class ComparisonTest extends FunSpec with Matchers {
+import test._
+
+class ComparisonTest extends FunSpec with Matchers with TestHelpers {
 
   describe("The new encoder") {
 
@@ -40,7 +42,7 @@ class ComparisonTest extends FunSpec with Matchers {
       }
 
       val newBytes: List[Byte] =
-        (Lexer andThen Parser andThen NewEncoder).run(new Context())(Source fromFile inputFile)
+        (Lexer andThen Parser andThen NewEncoder).run(newContext)(Source fromFile inputFile)
 
       newBytes should be (oldBytes)
     }

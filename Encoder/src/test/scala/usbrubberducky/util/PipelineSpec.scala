@@ -17,10 +17,12 @@
 package usbrubberducky
 package util
 
+import test._
+
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
 
-class PipelineSpec extends FunSpec with Matchers {
+class PipelineSpec extends FunSpec with Matchers with TestHelpers {
 
   private object Doubler extends Pipeline[Int, Int] {
     override def run(ctx: Context)(i: Int): Int = i * 2
@@ -36,12 +38,12 @@ class PipelineSpec extends FunSpec with Matchers {
         override def run(ctx: Context)(s: String) = s.length
       }
       val input: String = "foo"
-      val output: Int = pipeline.run(new Context())(input)
+      val output: Int = pipeline.run(newContext)(input)
       output should be (3)
     }
 
     it("can transform the input.") {
-      val func = Doubler.run(new Context()) _
+      val func = Doubler.run(newContext) _
       func(1) should be (2)
       func(2) should be (4)
       func(3) should be (6)
@@ -60,7 +62,7 @@ class PipelineSpec extends FunSpec with Matchers {
     }
 
     it("can be composed with another Pipeline.") {
-      (Doubler andThen Doubler andThen Doubler andThen Doubler).run(new Context())(1) should be (16)
+      (Doubler andThen Doubler andThen Doubler andThen Doubler).run(newContext)(1) should be (16)
     }
 
     it("can be composed with another Pipeline with different I/O types.") {
@@ -73,11 +75,11 @@ class PipelineSpec extends FunSpec with Matchers {
       val isGreaterThanFive = new Pipeline[Int, Boolean] { override def run(ctx: Context)(i: Int) = i > 5 }
 
       (makeA andThen unpackA andThen getStringLength andThen isGreaterThanFive)
-        .run(new Context())(3) should be (false)
+        .run(newContext)(3) should be (false)
     }
 
     it("passes the same context instance through the whole composition chain.") {
-      val context = new Context()
+      val context = newContext
 
       class ContextChecker(val expectedContext: Context) extends Pipeline[Int, Int] {
         override def run(ctx: Context)(i: Int) = {
@@ -93,7 +95,7 @@ class PipelineSpec extends FunSpec with Matchers {
     it("executes composed pipelines in the right order.") {
       val addTwo = new Pipeline[Int, Int] { override def run(ctx: Context)(i: Int) = i + 2 }
       val mulTen = new Pipeline[Int, Int] { override def run(ctx: Context)(i: Int) = i * 10 }
-      (addTwo andThen mulTen).run(new Context())(1) should be (30)
+      (addTwo andThen mulTen).run(newContext)(1) should be (30)
     }
 
   }
