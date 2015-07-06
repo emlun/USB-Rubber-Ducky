@@ -87,7 +87,12 @@ object Main {
     val pipeline = if(inputs.settings.prettyPrint) {
         Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
       } else {
-        Lexer andThen Parser andThen NewEncoder
+        Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
+          override def run(ctx: Context)(bytes: List[Byte]): Unit = {
+            bytes foreach { byte: Byte => Console.out.write(byte) }
+            Console.out.flush()
+          }
+        }
       }
 
       val context = new Context(inputs.keyboard, inputs.layout, inputFileName = Some(inputs.input.fileName))
