@@ -33,6 +33,15 @@ object Parser extends Pipeline[Iterator[Token], Script] {
     var bufferedToken: Option[Token] = None
 
     /**
+     * Unset the current token and return it.
+     */
+    def discardToken(): Option[Token] = {
+      val discarded = bufferedToken
+      bufferedToken = None
+      discarded
+    }
+
+    /**
      * Get the current token, or read and return the next token if the current
      * is undefined.
      */
@@ -67,7 +76,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
           None
         } flatMap { token =>
           if(expected contains token.kind) {
-            bufferedToken = None
+            discardToken()
             thenn(token)
           } else {
             ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
