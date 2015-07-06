@@ -80,6 +80,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
             thenn(token)
           } else {
             ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
+            discardToken()
             None
           }
         }
@@ -89,6 +90,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
           case intLit: IntLit => Some(andThen(intLit))
           case _ => {
             ctx.reporter.error(s"Expected integer literal, got ${token.kind}", token.pos)
+            discardToken()
             None
           }
         }
@@ -99,6 +101,7 @@ object Parser extends Pipeline[Iterator[Token], Script] {
           case intLit: PosIntLit => Some(intLit)
           case _ => {
             ctx.reporter.error(s"Expected positive integer literal, got ${token.kind}", token.pos)
+            discardToken()
             None
           }
         }
