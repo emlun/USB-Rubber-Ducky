@@ -17,6 +17,8 @@
 package usbrubberducky
 package util
 
+import scala.util.Try
+
 trait Pipeline[-I, +O] {
 
   def run(ctx: Context)(input: I): O
@@ -30,6 +32,25 @@ trait Pipeline[-I, +O] {
 
   }
 
+}
+
+trait TryPipeline[-I, +O] extends Pipeline[I, Try[O]] {
+  override def run(ctx: Context)(input: I) = Try(tryRun(ctx)(input))
+  def tryRun(ctx: Context)(input: I): O
+
+  def andThen[NextO](next: Pipeline[O, NextO]): TryPipeline[I, NextO] =
+    andThen(new TryPipeline[O, NextO]() {
+      override def tryRun(ctx: Context)(input: O) = next.run(ctx)(input)
+    })
+
+  def andThen[NextO](next: TryPipeline[O, NextO]): TryPipeline[I, NextO] = {
+    val first = this;
+    new TryPipeline[I, NextO]() {
+      override def run(ctx: Context)(input: I): Try[NextO] = first.run(ctx)(input).flatMap(next.run(ctx))
+      override def tryRun(ctx: Context)(input: I): Nothing =
+        throw new UnsupportedOperationException("This code should be unreachable - please file a bug report.")
+    }
+  }
 }
 
 object StdoutPrinter extends Pipeline[String, Unit] {

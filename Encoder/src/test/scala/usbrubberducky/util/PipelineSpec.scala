@@ -17,12 +17,15 @@
 package usbrubberducky
 package util
 
+import scala.util.Try
+
 import test._
 
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
+import org.scalatest.TryValues
 
-class PipelineSpec extends FunSpec with Matchers with TestHelpers {
+class PipelineSpec extends FunSpec with Matchers with TryValues with TestHelpers {
 
   private object Doubler extends Pipeline[Int, Int] {
     override def run(ctx: Context)(i: Int): Int = i * 2
@@ -96,6 +99,37 @@ class PipelineSpec extends FunSpec with Matchers with TestHelpers {
       val addTwo = new Pipeline[Int, Int] { override def run(ctx: Context)(i: Int) = i + 2 }
       val mulTen = new Pipeline[Int, Int] { override def run(ctx: Context)(i: Int) = i * 10 }
       (addTwo andThen mulTen).run(newContext)(1) should be (30)
+    }
+
+    it("can be composed with a TryPipeline, yielding a Pipeline to a Try type.") {
+      val addTwo  = new Pipeline[Int, Int]    { override def    run(ctx: Context)(i: Int) = i + 2 }
+      val divSelf = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i / i }
+      val composition: Pipeline[Int, Try[Int]] = addTwo andThen divSelf
+
+      composition.run(newContext)(1).success.value should be (1)
+      composition.run(newContext)(-2) should be a 'failure
+    }
+
+  }
+
+  describe("A TryPipeline") {
+
+    it("can be composed with a basic Pipeline, yielding a new TryPipeline.") {
+      val divSelf = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i / i }
+      val addTwo  = new Pipeline[Int, Int]    { override def    run(ctx: Context)(i: Int) = i + 2 }
+      val composition: TryPipeline[Int, Int] = divSelf andThen addTwo
+
+      composition.run(newContext)(1).success.value should be (3)
+      composition.run(newContext)(0) should be a 'failure
+    }
+
+    it("can be composed with another TryPipeline, yielding a new TryPipeline.") {
+      val divSelf = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i / i }
+      val addTwo  = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i + 2 }
+      val composition: TryPipeline[Int, Int] = divSelf andThen addTwo
+
+      composition.run(newContext)(1).success.value should be (3)
+      composition.run(newContext)(0) should be a 'failure
     }
 
   }
