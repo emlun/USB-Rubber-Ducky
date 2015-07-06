@@ -98,7 +98,15 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
             ctx.reporter.error("Bad positive integer literal: " + argumentString, argumentPos)
             new Token(BAD, argumentPos)
           }
-        case _                             => KeyName(argumentString.trim, argumentPos)
+        case _ =>
+          if(KEYNAMEKIND matches argumentString.trim) {
+            KeyName(argumentString.trim, argumentPos)
+          } else if(argumentString.trim.isEmpty) {
+            new Token(NEWLINE, linePos.copy(column = (commandString + argumentString).length + 1))
+          } else {
+            ctx.reporter.error(s"Expected key name or newline, got: ${argumentString.trim}", argumentPos)
+            new Token(BAD, argumentPos)
+          }
       }
 
     List(command, argument)
