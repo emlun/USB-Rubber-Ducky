@@ -164,6 +164,8 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
         case Command(None, _, _) => encodeModifierKeypress("KEY_COMMAND")
         case Command(Some(KeyName(value, _)), _, _) => encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI")
+
+        case KeyPress(KeyName(value, _), _) => List(strInstrToByte(value), 0x00: Byte)
       })
 
       val delayBytes = (statement match {
