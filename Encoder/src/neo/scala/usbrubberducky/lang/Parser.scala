@@ -20,15 +20,15 @@ package lang
 import scala.io.Source
 
 import util.Context
-import util.Pipeline
+import util.TryPipeline
 import util.NoPosition
 
 import Tokens._
 import ast.Trees._
 
-object Parser extends Pipeline[Iterator[Token], Script] {
+object Parser extends TryPipeline[Iterator[Token], Script] {
 
-  override def run(ctx: Context)(tokens: Iterator[Token]) = {
+  override def tryRun(ctx: Context)(tokens: Iterator[Token]) = {
 
     var bufferedToken: Option[Token] = None
 
@@ -169,10 +169,15 @@ object Parser extends Pipeline[Iterator[Token], Script] {
           case _                                 => None
         }
 
-    Script(
+    val result = Script(
       defaultDelay = parseDefaultDelay(),
       statements   = parseStatements()
     )
+    if(ctx.reporter.hasErrors) {
+      throw new RuntimeException("DuckyScript syntax error(s) in Parser")
+    } else {
+      result
+    }
   }
 
 }

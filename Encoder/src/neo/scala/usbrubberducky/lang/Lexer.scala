@@ -20,14 +20,14 @@ package lang
 import scala.io.Source
 
 import util.Context
-import util.Pipeline
+import util.TryPipeline
 import util.Position
 import util.Reporter
 import util.Trimmed
 
 import Tokens._
 
-object Lexer extends Pipeline[Source, Iterator[Token]] {
+object Lexer extends TryPipeline[Source, Iterator[Token]] {
 
   def ignoreLine(line: String): Boolean = line.trim.isEmpty || (line.trim startsWith "REM")
 
@@ -40,8 +40,14 @@ object Lexer extends Pipeline[Source, Iterator[Token]] {
     }
   }
 
-  override def run(ctx: Context)(source: Source) =
-    (source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled).toIterator
+  override def tryRun(ctx: Context)(source: Source) = {
+    val result = source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled
+    if(ctx.reporter.hasErrors) {
+      throw new RuntimeException("DuckyScript syntax error(s) in Lexer")
+    } else {
+      result.toIterator
+    }
+  }
 
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] =
     if(ignoreLine(line)) {

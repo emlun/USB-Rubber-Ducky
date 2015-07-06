@@ -24,6 +24,7 @@ import scala.util.Try
 
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
+import org.scalatest.TryValues
 
 import lang.Lexer
 import lang.Parser
@@ -33,7 +34,7 @@ import util.Pipeline
 
 import test._
 
-class PrinterSpec extends FunSpec with Matchers with TestHelpers {
+class PrinterSpec extends FunSpec with Matchers with TryValues with TestHelpers {
 
   private object StringToSource extends Pipeline[String, Source] {
     override def run(ctx: Context)(s: String) = Source fromString s
@@ -54,7 +55,7 @@ class PrinterSpec extends FunSpec with Matchers with TestHelpers {
           }
         } andThen StringToSource andThen Lexer andThen Parser andThen PrettyPrinter
 
-      val secondOutput = pipeline.run(newContext)(Source fromFile input)
+      val secondOutput: String = pipeline.run(newContext)(Source fromFile input).success.value
 
       secondOutput should be (firstOutput)
     }

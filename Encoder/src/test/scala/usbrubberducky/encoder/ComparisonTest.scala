@@ -22,13 +22,14 @@ import scala.io.Source
 
 import org.scalatest.FunSpec
 import org.scalatest.Matchers
+import org.scalatest.TryValues
 
 import lang.{Lexer,Parser}
 import util.Context
 
 import test._
 
-class ComparisonTest extends FunSpec with Matchers with TestHelpers {
+class ComparisonTest extends FunSpec with Matchers with TryValues with TestHelpers {
 
   val TEST_FILES =
     "src/test/resources/backspace.ducky" ::
@@ -117,7 +118,7 @@ class ComparisonTest extends FunSpec with Matchers with TestHelpers {
           }
 
           val newBytes: List[Byte] =
-            (Lexer andThen Parser andThen NewEncoder).run(newContext)(Source fromFile inputFile)
+            (Lexer andThen Parser andThen NewEncoder).run(newContext)(Source fromFile inputFile).success.value
 
           newBytes should be (oldBytes)
         }
