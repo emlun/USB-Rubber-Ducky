@@ -37,3 +37,4 @@ object NoPosition extends Position(0, 0, "") {
 }
 
 class Positioned(val pos: Position)
+abstract class PositionedBy(posProvider: Positioned) extends Positioned(posProvider.pos)
