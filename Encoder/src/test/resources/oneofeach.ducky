@@ -1,0 +1,31 @@
+REM One of each kind of statement. For compiler testing.
+DEFAULTDELAY 100
+a
+REPEAT 2
+DELAY 500
+CONTROL
+CONTROL a
+CTRL
+CTRL a
+ALT
+ALT a
+SHIFT
+SHIFT a
+REM CTRL-ALT // Causes infinite loop in Encoder.java
+CTRL-ALT a
+REM CTRL-SHIFT // Causes infinite loop in Encoder.java
+CTRL-SHIFT a
+REM COMMAND-OPTION // Causes infinite loop in Encoder.java
+COMMAND-OPTION a
+ALT-SHIFT
+ALT-SHIFT a
+ALT-TAB
+ALT-TAB a
+WINDOWS
+WINDOWS a
+GUI
+GUI a
+COMMAND
+COMMAND a
+a
+STRING foo
