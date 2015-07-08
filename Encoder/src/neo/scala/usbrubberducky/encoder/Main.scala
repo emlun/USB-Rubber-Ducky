@@ -84,7 +84,7 @@ object Main {
     })
 
   private def runEncoder(inputs: Inputs): Int = {
-    val pipeline = if(inputs.settings.prettyPrint) {
+    val pipeline: Pipeline[Source, Try[Any]] = if(inputs.settings.prettyPrint) {
         Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
       } else {
         Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
@@ -96,12 +96,9 @@ object Main {
       }
 
       val context = new Context(inputs.keyboard, inputs.layout, inputFileName = Some(inputs.input.fileName))
-      pipeline.run(context)(inputs.input.source)
-
-      if(context.reporter.hasErrors) {
-        ExitCodes.failure
-      } else {
-        ExitCodes.success
+      pipeline.run(context)(inputs.input.source) match {
+        case Success(_) => ExitCodes.success
+        case Failure(_) => ExitCodes.failure
       }
     }
 
