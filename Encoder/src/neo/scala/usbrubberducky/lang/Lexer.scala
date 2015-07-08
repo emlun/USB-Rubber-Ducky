@@ -29,6 +29,15 @@ import Tokens._
 
 object Lexer extends TryPipeline[Source, Iterator[Token]] {
 
+  override def tryRun(ctx: Context)(source: Source) = {
+    val result = source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled
+    if(ctx.reporter.hasErrors) {
+      throw new RuntimeException("DuckyScript syntax error(s) in Lexer")
+    } else {
+      result.toIterator
+    }
+  }
+
   def ignoreLine(line: String): Boolean = line.trim.isEmpty || (line.trim startsWith "REM")
 
   def suggestCommands(reporter: Reporter)(attempt: String): Unit = {
@@ -37,15 +46,6 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
       reporter.info(
         "Did you mean any of the following? " + (suggestions flatMap (_.keywords) mkString ", ")
       )
-    }
-  }
-
-  override def tryRun(ctx: Context)(source: Source) = {
-    val result = source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled
-    if(ctx.reporter.hasErrors) {
-      throw new RuntimeException("DuckyScript syntax error(s) in Lexer")
-    } else {
-      result.toIterator
     }
   }
 
