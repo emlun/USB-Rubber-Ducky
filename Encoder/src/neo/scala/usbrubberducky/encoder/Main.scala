@@ -56,6 +56,7 @@ object Main {
   }
 
   private case class Settings(
+    help: Boolean = false,
     infile: Option[String] = None,
     outfile: Option[String] = None,
     layout: String = "us",
@@ -68,6 +69,7 @@ object Main {
   private def processArguments(args: Array[String]): Settings = {
       val (options, remaining) = OptionParser.getOptions(args,
           Map(
+              "-h|--help" -> 'help,
               "-i|--infile=s" -> 'infileName,
               "-l|--layout=s" -> 'layoutName,
               "-o|--outfile=s" -> 'outfileName,
@@ -83,12 +85,17 @@ object Main {
       }
 
       Settings(
+          help = options contains 'help,
           infile = options.get('infileName) map { _.asInstanceOf[String] },
           layout = options.get('layoutName) map { _.asInstanceOf[String] } getOrElse "us",
           outfile = options.get('outfileName) map { _.asInstanceOf[String] },
           prettyPrint = options contains 'prettyPrint
       )
   }
+
+  private def printUsage() = println(
+          """Usage: TODO"""
+      )
 
   private def err(message: String): Unit = Console.err.println("ERROR: " + message)
 
@@ -119,6 +126,11 @@ object Main {
 
   def main(args: Array[String]) {
     val settings = processArguments(args)
+
+    if(settings.help) {
+        printUsage()
+        sys.exit(ExitCodes.success)
+    }
 
     val inputFile = Try(settings.infile match {
           case Some(fileName) => InputFile(fileName, Source fromFile fileName)
