@@ -15,7 +15,22 @@ sourceSets {
   }
 }
 
-repositories { mavenCentral() }
+project(':scala-getoptions') {
+  apply plugin: 'scala'
+  dependencies {
+    compile(
+      'org.scala-lang:scala-library:2.11.+',
+      'org.slf4j:slf4j-api:1.7.+',
+    )
+    testCompile(
+      'org.scalatest:scalatest_2.11:2.+',
+    )
+  }
+}
+
+allprojects {
+  repositories { mavenCentral() }
+}
 
 configurations {
   testRuntime { extendsFrom neoRuntime }
@@ -25,6 +40,7 @@ dependencies {
   neoCompile(
     'org.scala-lang:scala-library:2.11+',
     'org.scala-lang:scala-parser-combinators:+',
+    project(':scala-getoptions'),
   )
   testCompile(
     sourceSets.neo.output,

@@ -1,0 +1,3 @@
+[submodule "Encoder/scala-getoptions"]
+	path = Encoder/scala-getoptions
+	url = git@github.com:DavidGamba/scala-getoptions.git

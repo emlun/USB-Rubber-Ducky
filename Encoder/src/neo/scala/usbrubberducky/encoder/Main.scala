@@ -36,6 +36,8 @@ import util.Pipeline
 import util.Reporter
 import util.StdoutPrinter
 
+import com.gambaeng.utils.OptionParser
+
 object Main {
 
   /**
@@ -63,17 +65,30 @@ object Main {
   private case class InputFile(fileName: String, source: Source)
   private case class Inputs(settings: Settings, input: InputFile, layout: Properties, keyboard: Properties)
 
-  private def processArguments(args: List[String], settings: Settings): Settings = args match {
-      case Nil                     => settings
-      case "-i" :: infile  :: tail => processArguments(tail, settings.copy(infile  = Some(infile)))
-      case "-o" :: outfile :: tail => processArguments(tail, settings.copy(outfile = Some(outfile)))
-      case "-l" :: layout  :: tail => processArguments(tail, settings.copy(layout  = layout))
-      case "--pretty" :: tail      => processArguments(tail, settings.copy(prettyPrint = true))
-      case head :: tail            => {
-          err("Unknown command line option or too few option arguments: " + head)
+  private def processArguments(args: Array[String]): Settings = {
+      val (options, remaining) = OptionParser.getOptions(args,
+          Map(
+              "-i|--infile=s" -> 'infileName,
+              "-l|--layout=s" -> 'layoutName,
+              "-o|--outfile=s" -> 'outfileName,
+              "--pretty" -> 'prettyPrint
+          )
+      )
+
+      if(! remaining.isEmpty) {
+          err(
+              s"Unknown or malformed command line option${if(remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
+          )
           sys.exit(ExitCodes.badCommandlineArguments)
-        }
-    }
+      }
+
+      Settings(
+          infile = options.get('infileName) map { _.asInstanceOf[String] },
+          layout = options.get('layoutName) map { _.asInstanceOf[String] } getOrElse "us",
+          outfile = options.get('outfileName) map { _.asInstanceOf[String] },
+          prettyPrint = options contains 'prettyPrint
+      )
+  }
 
   private def err(message: String): Unit = Console.err.println("ERROR: " + message)
 
@@ -103,7 +118,7 @@ object Main {
     }
 
   def main(args: Array[String]) {
-    val settings = processArguments(args.toList, Settings())
+    val settings = processArguments(args)
 
     val inputFile = Try(settings.infile match {
           case Some(fileName) => InputFile(fileName, Source fromFile fileName)
