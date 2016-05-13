@@ -51,12 +51,6 @@ dependencies {
   testRuntime 'org.pegdown:pegdown:1.+'
 }
 
-// Use fast, incremental scala compiler
-tasks.withType(ScalaCompile) {
-  scalaCompileOptions.useAnt = false
-  scalaCompileOptions.additionalParameters = ['-feature']
-}
-
 jar {
   archiveName = 'encoder.jar'
   manifest {
