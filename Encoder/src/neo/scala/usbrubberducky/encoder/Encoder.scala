@@ -33,7 +33,8 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     def charToBytes(c: Char): List[Byte] = codeToBytes(charToCode(c))
 
     // Original Author:Jason Appelbaum Jason@Hak5.org
-    def charToCode(c: Char): String = (c match {
+    def charToCode(c: Char): String =
+      (c match {
         case _ if c < 128 => "ASCII"
         case _ if c < 256 => "ISO_8859_1"
         case _            => "UNICODE"
@@ -44,15 +45,15 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
       if (ctx.layout.getProperty(str) != null) {
         val keys: List[String] = (ctx.layout.getProperty(str).split(",") map { _.trim }).toList
         keys map { key =>
-            if (ctx.keyboard.getProperty(key) != null) {
-              strToByte(ctx.keyboard.getProperty(key).trim())
-            } else if (ctx.layout.getProperty(key) != null) {
-              strToByte(ctx.layout.getProperty(key).trim())
-            } else {
-              println("Key not found: " + key)
-              0x00: Byte
-            }
+          if (ctx.keyboard.getProperty(key) != null) {
+            strToByte(ctx.keyboard.getProperty(key).trim())
+          } else if (ctx.layout.getProperty(key) != null) {
+            strToByte(ctx.layout.getProperty(key).trim())
+          } else {
+            println("Key not found: " + key)
+            0x00: Byte
           }
+        }
       } else {
         println("Char not found:"+str);
         List(0x00: Byte)
@@ -60,7 +61,8 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     }
 
     // Original Author:Jason Appelbaum Jason@Hak5.org
-    def strToByte(str: String): Byte = str match {
+    def strToByte(str: String): Byte =
+      str match {
         case _ if str startsWith "0x" => Integer.parseInt(str.substring(2), 16).toByte
         case _                        => Integer.parseInt(str).toByte
       }
@@ -68,9 +70,9 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     def strInstrToByte(instruction: String): Byte = {
       val recurse: (String => Byte) = strInstrToByte _
 
-      if (ctx.keyboard.getProperty("KEY_" + instruction) != null) {
+      if (ctx.keyboard.getProperty("KEY_" + instruction) != null)
         strToByte(ctx.keyboard.getProperty("KEY_" + instruction))
-      } else instruction match {
+      else instruction match {
         case "ESCAPE"         => recurse("ESC")
         case "DEL"            => recurse("DELETE")
         case "BREAK"          => recurse("PAUSE")
@@ -96,12 +98,13 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     def encodeDelay(milliseconds: Int): List[Byte] =
       List.fill(milliseconds / 255)(List(0x00.toByte, 0xFF.toByte)).flatten ++:
       (milliseconds % 255 match {
-        case 0         => Nil
+        case 0 => Nil
         case remainder => List(0x00.toByte, remainder.toByte)
       }) ++:
       Nil
 
-    def encodeModifiedKeypress(keyName: String, modifierNames: String*) = List(
+    def encodeModifiedKeypress(keyName: String, modifierNames: String*) =
+      List(
         strInstrToByte(keyName),
         modifierNames.foldLeft(0: Byte) { (byte: Byte, modifierName: String) =>
           (byte | strToByte(ctx.keyboard.getProperty(modifierName))).toByte
@@ -122,33 +125,33 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
             bytes ++: (if (bytes.length % 2 == 0) Nil else List(0x00: Byte))
           })
 
-        case Ctrl(None, _, _)                              => encodeModifierKeypress("KEY_LEFT_CTRL")
+        case Ctrl(None, _, _)                    => encodeModifierKeypress("KEY_LEFT_CTRL")
         case Ctrl(Some(KeyName(value, _)), _, _) => encodeModifiedKeypress(value, "MODIFIERKEY_CTRL")
 
-        case Alt(None, _, _)                              => encodeModifierKeypress("KEY_LEFT_ALT")
+        case Alt(None, _, _)                    => encodeModifierKeypress("KEY_LEFT_ALT")
         case Alt(Some(KeyName(value, _)), _, _) => encodeModifiedKeypress(value, "MODIFIERKEY_ALT")
 
-        case Shift(None, _, _)                              => encodeModifierKeypress("KEY_LEFT_SHIFT")
+        case Shift(None, _, _)                    => encodeModifierKeypress("KEY_LEFT_SHIFT")
         case Shift(Some(KeyName(value, _)), _, _) => encodeModifiedKeypress(value, "MODIFIERKEY_SHIFT")
 
-        case CtrlAlt(None, _, pos) => {
+        case CtrlAlt(None, _, pos) =>
           ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
           Nil
-        }
+
         case CtrlAlt(Some(KeyName(value, _)), _, _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_CTRL", "MODIFIERKEY_ALT")
 
-        case CtrlShift(None, _, pos) => {
+        case CtrlShift(None, _, pos) =>
           ctx.reporter.warn("CTRL-ALT-nothing does nothing.", pos)
           Nil
-        }
+
         case CtrlShift(Some(KeyName(value, _)), _, _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_CTRL", "MODIFIERKEY_SHIFT")
 
-        case CommandOption(None, _, pos) => {
+        case CommandOption(None, _, pos) =>
           ctx.reporter.warn("COMMAND-OPTION-nothing does nothing.", pos)
           Nil
-        }
+
         case CommandOption(Some(KeyName(value, _)), _, _) =>
           encodeModifiedKeypress(value, "MODIFIERKEY_LEFT_GUI", "MODIFIERKEY_ALT")
 
@@ -168,10 +171,10 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
         case KeyPress(KeyName(value, _), _) => List(strInstrToByte(value), 0x00: Byte)
       })
 
-      val delayBytes = (statement match {
+      val delayBytes = statement match {
         case Delay(_,_) => Nil
         case _          => defaultDelayBytes
-      })
+      }
 
       /*
        * This defaultDelay behaviour is wrong, but it agrees with the existing encoder.
