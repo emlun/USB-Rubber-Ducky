@@ -23,18 +23,19 @@ class Reporter(
     val warn: Boolean = true,
     val error: Boolean = true,
     val println: (Any => Unit) = Console.err.println
-  ) {
+) {
 
   private var _hasErrors = false
   def hasErrors = _hasErrors
 
-  private def report(prefix: String, message: Any, pos: Option[Position]): Unit = pos map { pos =>
-        println(prefix + pos + ": " + message)
-        println(pos.longString)
-      } orElse {
-        println(prefix + message)
-        None
-      }
+  private def report(prefix: String, message: Any, pos: Option[Position]): Unit =
+    pos map { pos =>
+      println(prefix + pos + ": " + message)
+      println(pos.longString)
+    } orElse {
+      println(prefix + message)
+      None
+    }
 
   def debug(message: Any, pos: Option[Position]): Unit = if (debug) { report("DEBUG: ", message, pos) }
   def info(message: Any, pos: Option[Position]): Unit  = if (info)  { report("INFO: ", message, pos) }
