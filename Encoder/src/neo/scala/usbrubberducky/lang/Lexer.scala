@@ -50,9 +50,9 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
   }
 
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] =
-    if (ignoreLine(line)) {
+    if (ignoreLine(line))
       Nil
-    } else {
+    else {
       val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
       val newline = new Token(NEWLINE, linePos.copy(column = line.length))
 
@@ -65,12 +65,12 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
   def processSingleWord
       (ctx: Context, linePos: Position)
       (word: String)
-      : Token = {
+  : Token = {
     val keywordKindCandidates = KeywordTokenKinds filter { _ matches word }
 
     keywordKindCandidates.toList match {
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos)
-      case Nil                            =>
+      case Nil =>
         if (KEYNAMEKIND matches word) {
           KeyName(word, linePos)
         } else {
@@ -84,36 +84,36 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
   def processCommandWithArgument
       (ctx: Context, linePos: Position)
       (commandString: String, argumentString: String)
-      : List[Token] = {
+  : List[Token] = {
     val command = processSingleWord(ctx, linePos)(commandString)
     val argumentPos = linePos.copy(column = commandString.length + 2)
 
     val argument = command.kind match {
-        case STRING                        => StringLit(argumentString, argumentPos)
-        case DELAY | DEFAULTDELAY =>
-          if (INTLITKIND matches argumentString.trim) {
-            IntLit(argumentString.trim.toInt, argumentPos)
-          } else {
-            ctx.reporter.error("Bad integer literal: " + argumentString, argumentPos)
-            new Token(BAD, argumentPos)
-          }
-        case REPEAT =>
-          if (POSINTLITKIND matches argumentString.trim) {
-            PosIntLit(argumentString.trim.toInt, argumentPos)
-          } else {
-            ctx.reporter.error("Bad positive integer literal: " + argumentString, argumentPos)
-            new Token(BAD, argumentPos)
-          }
-        case _ =>
-          if (KEYNAMEKIND matches argumentString.trim) {
-            KeyName(argumentString.trim, argumentPos)
-          } else if (argumentString.trim.isEmpty) {
-            new Token(NEWLINE, linePos.copy(column = (commandString + argumentString).length + 1))
-          } else {
-            ctx.reporter.error(s"Expected key name or newline, got: ${argumentString.trim}", argumentPos)
-            new Token(BAD, argumentPos)
-          }
-      }
+      case STRING                        => StringLit(argumentString, argumentPos)
+      case DELAY | DEFAULTDELAY =>
+        if (INTLITKIND matches argumentString.trim) {
+          IntLit(argumentString.trim.toInt, argumentPos)
+        } else {
+          ctx.reporter.error("Bad integer literal: " + argumentString, argumentPos)
+          new Token(BAD, argumentPos)
+        }
+      case REPEAT =>
+        if (POSINTLITKIND matches argumentString.trim) {
+          PosIntLit(argumentString.trim.toInt, argumentPos)
+        } else {
+          ctx.reporter.error("Bad positive integer literal: " + argumentString, argumentPos)
+          new Token(BAD, argumentPos)
+        }
+      case _ =>
+        if (KEYNAMEKIND matches argumentString.trim) {
+          KeyName(argumentString.trim, argumentPos)
+        } else if (argumentString.trim.isEmpty) {
+          new Token(NEWLINE, linePos.copy(column = (commandString + argumentString).length + 1))
+        } else {
+          ctx.reporter.error(s"Expected key name or newline, got: ${argumentString.trim}", argumentPos)
+          new Token(BAD, argumentPos)
+        }
+    }
 
     List(command, argument)
   }
