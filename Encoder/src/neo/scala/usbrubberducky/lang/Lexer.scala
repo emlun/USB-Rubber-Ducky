@@ -41,7 +41,7 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
   def ignoreLine(line: String): Boolean = line.trim.isEmpty || (line.trim startsWith "REM")
 
   def suggestCommands(reporter: Reporter)(attempt: String): Unit = {
-    val suggestions = KEYWORD_TOKEN_KINDS filter { _ startsWith attempt }
+    val suggestions = KeywordTokenKinds filter { _ startsWith attempt }
     if(!suggestions.isEmpty) {
       reporter.info(
         "Did you mean any of the following? " + (suggestions flatMap (_.keywords) mkString ", ")
@@ -66,7 +66,7 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
       (ctx: Context, linePos: Position)
       (word: String)
       : Token = {
-    val keywordKindCandidates = KEYWORD_TOKEN_KINDS filter { _ matches word }
+    val keywordKindCandidates = KeywordTokenKinds filter { _ matches word }
 
     keywordKindCandidates.toList match {
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos)

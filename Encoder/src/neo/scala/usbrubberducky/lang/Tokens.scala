@@ -22,13 +22,13 @@ import util.Positioned
 
 object Tokens {
 
-  val COMMAND_TOKEN_KINDS: Set[KeywordKind] = Set(
+  val CommandTokenKinds: Set[KeywordKind] = Set(
     DELAY,
     ALT, ALT_SHIFT, ALT_TAB, COMMAND, COMMAND_OPTION, CONTROL, CTRL_ALT, CTRL_SHIFT, SHIFT, STRING, SUPER
   )
 
-  val BEGIN_STATEMENT_TOKEN_KINDS: Set[TokenKind] = COMMAND_TOKEN_KINDS ++ Set(KEYNAMEKIND, NEWLINE)
-  val KEYWORD_TOKEN_KINDS: Set[KeywordKind] = COMMAND_TOKEN_KINDS + DEFAULTDELAY + REPEAT
+  val BeginStatementTokenKinds: Set[TokenKind] = CommandTokenKinds ++ Set(KEYNAMEKIND, NEWLINE)
+  val KeywordTokenKinds: Set[KeywordKind] = CommandTokenKinds + DEFAULTDELAY + REPEAT
 
   sealed class Token(val kind: TokenKind, val pos: Position) extends Positioned {
     override def toString = kind.toString

@@ -31,7 +31,7 @@ import test._
 
 class ComparisonTest extends FunSpec with Matchers with TryValues with TestHelpers {
 
-  val TEST_FILES =
+  val testFiles =
     "src/test/resources/backspace.ducky" ::
     "src/test/resources/basic-terminal-commands-ubuntu.ducky" ::
     "src/test/resources/batch-wiper-drive-eraser.ducky" ::
@@ -108,7 +108,7 @@ class ComparisonTest extends FunSpec with Matchers with TryValues with TestHelpe
 
     describe("produces the same output as the old encoder") {
 
-      TEST_FILES foreach { inputFile =>
+      testFiles foreach { inputFile =>
 
         it(s"on $inputFile") {
           val oldBytes: List[Byte] = {

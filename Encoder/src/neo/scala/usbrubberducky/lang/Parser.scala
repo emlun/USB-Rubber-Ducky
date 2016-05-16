@@ -135,7 +135,7 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
         case _ => None
       }) getOrElse PosIntLit(1, NoPosition)
 
-    def parseStatement(): Option[Statement] = eat(BEGIN_STATEMENT_TOKEN_KINDS.toList:_*) { token => token match {
+    def parseStatement(): Option[Statement] = eat(BeginStatementTokenKinds.toList:_*) { token => token match {
           case OfKind(NEWLINE)        => None
           case keyName: KeyName       => Some(KeyPress(keyName, maybeEatRepeat()))
           case OfKind(ALT)            => Some(Alt(maybeEatKeyName(), maybeEatRepeat(), token.pos))

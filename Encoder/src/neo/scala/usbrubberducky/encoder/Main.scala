@@ -46,13 +46,13 @@ object Main {
    * 20-29 range: Internal errors (file bug report)
    */
   private object ExitCodes {
-    val success = 0
-    val failure = 1
-    val badCommandlineArguments = 10
-    val inputFileFailed = 11
-    val invalidLayout = 12
-    val layoutFailed = 20
-    val keyboardFailed = 21
+    val Success = 0
+    val Failure = 1
+    val BadCommandlineArguments = 10
+    val InputFileFailed = 11
+    val InvalidLayout = 12
+    val LayoutFailed = 20
+    val KeyboardFailed = 21
   }
 
   private case class Settings(
@@ -81,7 +81,7 @@ object Main {
           err(
               s"Unknown or malformed command line option${if(remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
           )
-          sys.exit(ExitCodes.badCommandlineArguments)
+          sys.exit(ExitCodes.BadCommandlineArguments)
       }
 
       Settings(
@@ -119,8 +119,8 @@ object Main {
 
       val context = new Context(inputs.keyboard, inputs.layout, inputFileName = Some(inputs.input.fileName))
       pipeline.run(context)(inputs.input.source) match {
-        case Success(_) => ExitCodes.success
-        case Failure(_) => ExitCodes.failure
+        case Success(_) => ExitCodes.Success
+        case Failure(_) => ExitCodes.Failure
       }
     }
 
@@ -129,7 +129,7 @@ object Main {
 
     if(settings.help) {
         printUsage()
-        sys.exit(ExitCodes.success)
+        sys.exit(ExitCodes.Success)
     }
 
     val inputFile = Try(settings.infile match {
@@ -138,40 +138,40 @@ object Main {
         }) recover {
           case _: FileNotFoundException => {
             err(s"File not found: ${settings.infile}")
-            sys.exit(ExitCodes.inputFileFailed)
+            sys.exit(ExitCodes.InputFileFailed)
           }
           case _ => {
             err(s"Failed to open input file: ${settings.infile}")
-            sys.exit(ExitCodes.inputFileFailed)
+            sys.exit(ExitCodes.InputFileFailed)
           }
         }
 
     val layout = loadProperties(settings.layout + ".properties") recover {
         case _: NullPointerException => {
           err(s"Unknown layout: ${settings.layout}")
-          sys.exit(ExitCodes.invalidLayout)
+          sys.exit(ExitCodes.InvalidLayout)
         }
         case error: IOException => {
           err(s"Failed to load layout definition: ${settings.layout} ($error)")
-          sys.exit(ExitCodes.layoutFailed)
+          sys.exit(ExitCodes.LayoutFailed)
         }
         case error: IllegalArgumentException => {
           err(s"""Corrupted layout definition "${settings.layout}" - please file a bug report. ($error)""")
-          sys.exit(ExitCodes.layoutFailed)
+          sys.exit(ExitCodes.LayoutFailed)
         }
       }
 
     val keyboard = loadProperties("keyboard.properties") recover {
         case error => {
           err(s"Failed to load keycode mapping - please file a bug report. ($error)")
-          sys.exit(ExitCodes.keyboardFailed)
+          sys.exit(ExitCodes.KeyboardFailed)
         }
       }
 
     val exitCode = (inputFile, layout, keyboard) match {
       case (Success(inputFile), Success(layout), Success(keyboard)) =>
         runEncoder(Inputs(settings, inputFile, layout, keyboard))
-      case _ => ExitCodes.failure
+      case _ => ExitCodes.Failure
     }
 
     sys.exit(exitCode)
