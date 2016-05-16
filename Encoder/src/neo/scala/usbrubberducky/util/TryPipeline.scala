@@ -17,17 +17,23 @@
 package usbrubberducky
 package util
 
-trait Pipeline[-I, +O] {
+import scala.util.Try
 
-  def run(ctx: Context)(input: I): O
+trait TryPipeline[-I, +O] extends Pipeline[I, Try[O]] {
+  override def run(ctx: Context)(input: I) = Try(tryRun(ctx)(input))
+  def tryRun(ctx: Context)(input: I): O
 
-  def andThen[NextO](next: Pipeline[O, NextO]): Pipeline[I, NextO] = {
+  def andThen[NextO](next: Pipeline[O, NextO]): TryPipeline[I, NextO] =
+    andThen(new TryPipeline[O, NextO]() {
+      override def tryRun(ctx: Context)(input: O) = next.run(ctx)(input)
+    })
+
+  def andThen[NextO](next: TryPipeline[O, NextO]): TryPipeline[I, NextO] = {
     val first = this;
-    new Pipeline[I, NextO]() {
-      override def run(ctx: Context)(input: I): NextO = (first.run(ctx) _ andThen next.run(ctx) _)(input)
-      override def toString = s"Pipeline composition: ($first) then ($next)"
+    new TryPipeline[I, NextO]() {
+      override def run(ctx: Context)(input: I): Try[NextO] = first.run(ctx)(input).flatMap(next.run(ctx))
+      override def tryRun(ctx: Context)(input: I): Nothing =
+        throw new UnsupportedOperationException("This code should be unreachable - please file a bug report.")
     }
-
   }
-
 }

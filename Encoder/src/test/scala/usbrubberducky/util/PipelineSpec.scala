@@ -112,40 +112,4 @@ class PipelineSpec extends FunSpec with Matchers with TryValues with TestHelpers
 
   }
 
-  describe("A TryPipeline") {
-
-    it("can be composed with a basic Pipeline, yielding a new TryPipeline.") {
-      val divSelf = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i / i }
-      val addTwo  = new Pipeline[Int, Int]    { override def    run(ctx: Context)(i: Int) = i + 2 }
-      val composition: TryPipeline[Int, Int] = divSelf andThen addTwo
-
-      composition.run(newContext)(1).success.value should be (3)
-      composition.run(newContext)(0) should be a 'failure
-    }
-
-    it("can be composed with another TryPipeline, yielding a new TryPipeline.") {
-      val divSelf = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i / i }
-      val addTwo  = new TryPipeline[Int, Int] { override def tryRun(ctx: Context)(i: Int) = i + 2 }
-      val composition: TryPipeline[Int, Int] = divSelf andThen addTwo
-
-      composition.run(newContext)(1).success.value should be (3)
-      composition.run(newContext)(0) should be a 'failure
-    }
-
-    it("is evaluated if and only if all previous TryPipelines in the composition succeeded.") {
-      val divSelf       = new TryPipeline[Int, Int]  { override def tryRun(ctx: Context)(i: Int) = i / i }
-      val addTwo        = new Pipeline[Int, Int]     { override def    run(ctx: Context)(i: Int) = i + 2 }
-      val failIfReached = new Pipeline[Any, Nothing] { override def    run(ctx: Context)(a: Any) =
-        fail("This code should not be reached.")
-      }
-
-      val divAdd: TryPipeline[Int, Int] = divSelf andThen addTwo
-      divAdd.run(newContext)(1).success.value should be (3)
-
-      val failFast = divSelf andThen failIfReached
-      failFast.run(newContext)(1) should be a 'failure
-    }
-
-  }
-
 }
