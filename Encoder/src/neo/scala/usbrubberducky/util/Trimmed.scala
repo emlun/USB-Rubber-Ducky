@@ -17,6 +17,16 @@
 package usbrubberducky
 package util
 
+/** Extractor for trimming whitespace while pattern matching
+  *
+  * Example:
+  * {{{
+  * "  foo " match {
+  *   case Trimmed(s) => assert (s == "foo")
+  * }
+  * }}}
+  *
+  */
 object Trimmed {
   def unapply(s: String): Option[String] = Some(s.trim)
 }
