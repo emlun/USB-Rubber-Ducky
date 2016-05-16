@@ -24,6 +24,6 @@ class Context(
     val layout: Properties,
     makeReporter: =>Reporter = { new Reporter },
     val inputFileName: Option[String] = None
-    ) {
+) {
   val reporter = makeReporter
 }
