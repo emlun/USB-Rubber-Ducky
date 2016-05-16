@@ -52,7 +52,3 @@ trait TryPipeline[-I, +O] extends Pipeline[I, Try[O]] {
     }
   }
 }
-
-object StdoutPrinter extends Pipeline[String, Unit] {
-  override def run(ctx: Context)(s: String) = println(s)
-}
