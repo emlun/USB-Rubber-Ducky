@@ -52,14 +52,12 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
      */
     def readToken(): Option[Token] = {
       bufferedToken =
-        if (tokens.hasNext) {
+        if (tokens.hasNext)
           tokens.next match {
             case OfKind(BAD) => readToken() // Skip bad tokens
             case goodToken   => Some(goodToken)
           }
-        } else {
-          None
-        }
+        else None
       bufferedToken
     }
 
@@ -72,70 +70,77 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
      */
     def eat[T](expected: TokenKind*)(thenn: Token => Option[T]): Option[T] =
       currentToken() orElse {
-          ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")
+        ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")
+        None
+      } flatMap { token =>
+        if (expected contains token.kind) {
+          discardToken()
+          thenn(token)
+        } else {
+          ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
+          discardToken()
           None
-        } flatMap { token =>
-          if (expected contains token.kind) {
-            discardToken()
-            thenn(token)
-          } else {
-            ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
-            discardToken()
-            None
-          }
         }
+      }
 
-    def eatIntLit[T](andThen: (IntLit => T)): Option[T] = eat(INTLITKIND) { token =>
+    def eatIntLit[T](andThen: (IntLit => T)): Option[T] =
+      eat(INTLITKIND) { token =>
         token match {
           case intLit: IntLit => Some(andThen(intLit))
-          case _ => {
+          case _ =>
             ctx.reporter.error(s"Expected integer literal, got ${token.kind}", token.pos)
             discardToken()
             None
-          }
         }
       }
 
-    def eatPosIntLit[T](andThen: (PosIntLit => T)): Option[T] = eat(POSINTLITKIND) { token =>
+    def eatPosIntLit[T](andThen: (PosIntLit => T)): Option[T] =
+      eat(POSINTLITKIND) { token =>
         token match {
           case intLit: PosIntLit => Some(andThen(intLit))
-          case _ => {
+          case _ =>
             ctx.reporter.error(s"Expected positive integer literal, got ${token.kind}", token.pos)
             discardToken()
             None
-          }
         }
       }
 
-    def eatStringLit[T](andThen: (StringLit => T)): Option[T] = eat(STRLITKIND) { token =>
+    def eatStringLit[T](andThen: (StringLit => T)): Option[T] =
+      eat(STRLITKIND) { token =>
         token match {
           case stringLit: StringLit => Some(andThen(stringLit))
-          case _ => {
+          case _ =>
             ctx.reporter.error(s"Expected string literal, got ${token.kind}", token.pos)
             None
-          }
         }
       }
 
-    def maybeEatKeyName(): Option[KeyName] = eat(KEYNAMEKIND, NEWLINE) { maybeKeyName =>
+    def maybeEatKeyName(): Option[KeyName] =
+      eat(KEYNAMEKIND, NEWLINE) { maybeKeyName =>
         maybeKeyName match {
           case keyName: KeyName => Some(keyName)
           case _                => None
         }
       }
 
-    def maybeEatRepeat(): PosIntLit = (currentToken() match {
-        case Some(OfKind(NEWLINE)) => {
+    def maybeEatRepeat(): PosIntLit =
+      (currentToken() match {
+        case Some(OfKind(NEWLINE)) =>
           readToken()
           Some(maybeEatRepeat())
-        }
-        case Some(OfKind(REPEAT)) => eat(REPEAT) { _ => eatPosIntLit { intLit =>
-            intLit.copy(value = intLit.value + 1)
-          } }
+
+        case Some(OfKind(REPEAT)) =>
+          eat(REPEAT) { _ =>
+            eatPosIntLit { intLit =>
+              intLit.copy(value = intLit.value + 1)
+            }
+          }
         case _ => None
       }) getOrElse PosIntLit(1, NoPosition)
 
-    def parseStatement(): Option[Statement] = eat(BeginStatementTokenKinds.toList:_*) { token => token match {
+    def parseStatement(): Option[Statement] =
+      eat(BeginStatementTokenKinds.toList:_*) { token =>
+        token match {
           case OfKind(NEWLINE)        => None
           case keyName: KeyName       => Some(KeyPress(keyName, maybeEatRepeat()))
           case OfKind(ALT)            => Some(Alt(maybeEatKeyName(), maybeEatRepeat(), token.pos))
@@ -162,12 +167,12 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
 
     def parseDefaultDelay(): Option[DefaultDelay] =
       currentToken() match {
-          case Some(defaultDelay@OfKind(DEFAULTDELAY)) => {
-            readToken()
-            eatIntLit { intLit => DefaultDelay(intLit) }
-          }
-          case _                                 => None
-        }
+        case Some(defaultDelay @ OfKind(DEFAULTDELAY)) =>
+          readToken()
+          eatIntLit { intLit => DefaultDelay(intLit) }
+
+        case _ => None
+      }
 
     val result = Script(
       defaultDelay = parseDefaultDelay(),
