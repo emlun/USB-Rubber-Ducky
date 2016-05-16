@@ -105,9 +105,12 @@ object Tokens {
     extends ValueToken[Int](INTLITKIND, pos)
 
   case class PosIntLit(override val value: Int, override val pos: Position)
-    extends ValueToken[Int](POSINTLITKIND, pos) {
-      if (value < 1) throw new IllegalArgumentException(s"PosIntLit value must be positive (got $value).")
+    extends ValueToken[Int](POSINTLITKIND, pos)
+  {
+    if (value < 1) {
+      throw new IllegalArgumentException(s"PosIntLit value must be positive (got $value).")
     }
+  }
 
   case class StringLit(override val value: String, override val pos: Position)
     extends ValueToken[String](STRLITKIND, pos)
