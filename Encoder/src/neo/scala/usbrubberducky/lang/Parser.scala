@@ -32,24 +32,20 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
 
     var bufferedToken: Option[Token] = None
 
-    /**
-     * Unset the current token and return it.
-     */
+    /** Unsets and returns the current token
+      */
     def discardToken(): Option[Token] = {
       val discarded = bufferedToken
       bufferedToken = None
       discarded
     }
 
-    /**
-     * Get the current token, or read and return the next token if the current
-     * is undefined.
-     */
+    /** Gets the current token, reading the next if the current is undefined
+      */
     def currentToken(): Option[Token] = bufferedToken orElse readToken()
 
-    /**
-     * Read the next token into the current token buffer, and return it.
-     */
+    /** Reads the next token into the current token buffer and returns it
+      */
     def readToken(): Option[Token] = {
       bufferedToken =
         if (tokens.hasNext)
@@ -62,12 +58,13 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
     }
 
 
-    /**
-     * Test if the current token is of the expected type. If it is, then unset
-     * the current token buffer and pass the token as the argument to the thenn
-     * function. If it is not, then produce an error message and do not run the
-     * thenn function.
-     */
+    /** Runs `thenn` if the current token is an `expected` kind
+      *
+      * Tests if the current token is one of the `expected` types. If it is,
+      * then unsets the current token buffer and passes the token as the
+      * argument to `thenn`. If it is not, then produces an error message and
+      * does not run `thenn`.
+      */
     def eat[T](expected: TokenKind*)(thenn: Token => Option[T]): Option[T] =
       currentToken() orElse {
         ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")

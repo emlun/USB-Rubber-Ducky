@@ -41,10 +41,10 @@ import com.gambaeng.utils.OptionParser
 object Main {
 
   /**
-   * 0-9 range: General
-   * 10-19 range: Bad input
-   * 20-29 range: Internal errors (file bug report)
-   */
+    * 0-9 range: General
+    * 10-19 range: Bad input
+    * 20-29 range: Internal errors (file bug report)
+    */
   private object ExitCodes {
     val Success = 0
     val Failure = 1
