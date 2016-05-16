@@ -37,24 +37,24 @@ class Reporter(
       None
     }
 
-  def debug(message: Any, pos: Option[Position]): Unit = if (debug) { report("DEBUG: ", message, pos) }
-  def info(message: Any, pos: Option[Position]): Unit  = if (info)  { report("INFO: ", message, pos) }
-  def warn(message: Any, pos: Option[Position]): Unit  = if (warn)  { report("WARN: ", message, pos) }
-  def error(message: Any, pos: Option[Position]): Unit = {
+  def debug(message: =>Any, pos: =>Option[Position]): Unit = if (debug) { report("DEBUG: ", message, pos) }
+  def info(message: =>Any, pos: =>Option[Position]): Unit  = if (info)  { report("INFO: ", message, pos) }
+  def warn(message: =>Any, pos: =>Option[Position]): Unit  = if (warn)  { report("WARN: ", message, pos) }
+  def error(message: =>Any, pos: =>Option[Position]): Unit = {
     _hasErrors = true
     if (error) {
       report("ERROR: ", message, pos)
     }
   }
 
-  def debug(message: Any): Unit = debug(message, None)
-  def info(message: Any): Unit  = info(message, None)
-  def warn(message: Any): Unit  = warn(message, None)
-  def error(message: Any): Unit = error(message, None)
+  def debug(message: =>Any): Unit = debug(message, None)
+  def info(message: =>Any): Unit  = info(message, None)
+  def warn(message: =>Any): Unit  = warn(message, None)
+  def error(message: =>Any): Unit = error(message, None)
 
-  def debug(message: Any, pos: Position): Unit = debug(message, Some(pos))
-  def info(message: Any, pos: Position): Unit  = info(message, Some(pos))
-  def warn(message: Any, pos: Position): Unit  = warn(message, Some(pos))
-  def error(message: Any, pos: Position): Unit = error(message, Some(pos))
+  def debug(message: =>Any, pos: Position): Unit = debug(message, Some(pos))
+  def info(message: =>Any, pos: Position): Unit  = info(message, Some(pos))
+  def warn(message: =>Any, pos: Position): Unit  = warn(message, Some(pos))
+  def error(message: =>Any, pos: Position): Unit = error(message, Some(pos))
 
 }
