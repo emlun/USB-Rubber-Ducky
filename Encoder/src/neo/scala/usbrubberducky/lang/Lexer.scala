@@ -31,7 +31,7 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
 
   override def tryRun(ctx: Context)(source: Source) = {
     val result = source.getLines.zipWithIndex flatMap (processLine(ctx) _).tupled
-    if(ctx.reporter.hasErrors) {
+    if (ctx.reporter.hasErrors) {
       throw new RuntimeException("DuckyScript syntax error(s) in Lexer")
     } else {
       result.toIterator
@@ -42,7 +42,7 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
 
   def suggestCommands(reporter: Reporter)(attempt: String): Unit = {
     val suggestions = KeywordTokenKinds filter { _ startsWith attempt }
-    if(!suggestions.isEmpty) {
+    if (!suggestions.isEmpty) {
       reporter.info(
         "Did you mean any of the following? " + (suggestions flatMap (_.keywords) mkString ", ")
       )
@@ -50,7 +50,7 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
   }
 
   def processLine(ctx: Context)(line: String, lineIndex: Int): List[Token] =
-    if(ignoreLine(line)) {
+    if (ignoreLine(line)) {
       Nil
     } else {
       val linePos = Position(lineIndex + 1, 1, line, fileName = ctx.inputFileName)
@@ -71,7 +71,7 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
     keywordKindCandidates.toList match {
       case List(commandKind: KeywordKind) => new Token(commandKind, linePos)
       case Nil                            =>
-        if(KEYNAMEKIND matches word) {
+        if (KEYNAMEKIND matches word) {
           KeyName(word, linePos)
         } else {
           ctx.reporter.error(s"Not a command or key name: $word", linePos)
@@ -91,23 +91,23 @@ object Lexer extends TryPipeline[Source, Iterator[Token]] {
     val argument = command.kind match {
         case STRING                        => StringLit(argumentString, argumentPos)
         case DELAY | DEFAULTDELAY =>
-          if(INTLITKIND matches argumentString.trim) {
+          if (INTLITKIND matches argumentString.trim) {
             IntLit(argumentString.trim.toInt, argumentPos)
           } else {
             ctx.reporter.error("Bad integer literal: " + argumentString, argumentPos)
             new Token(BAD, argumentPos)
           }
         case REPEAT =>
-          if(POSINTLITKIND matches argumentString.trim) {
+          if (POSINTLITKIND matches argumentString.trim) {
             PosIntLit(argumentString.trim.toInt, argumentPos)
           } else {
             ctx.reporter.error("Bad positive integer literal: " + argumentString, argumentPos)
             new Token(BAD, argumentPos)
           }
         case _ =>
-          if(KEYNAMEKIND matches argumentString.trim) {
+          if (KEYNAMEKIND matches argumentString.trim) {
             KeyName(argumentString.trim, argumentPos)
-          } else if(argumentString.trim.isEmpty) {
+          } else if (argumentString.trim.isEmpty) {
             new Token(NEWLINE, linePos.copy(column = (commandString + argumentString).length + 1))
           } else {
             ctx.reporter.error(s"Expected key name or newline, got: ${argumentString.trim}", argumentPos)

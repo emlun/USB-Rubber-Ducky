@@ -52,7 +52,7 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
      */
     def readToken(): Option[Token] = {
       bufferedToken =
-        if(tokens.hasNext) {
+        if (tokens.hasNext) {
           tokens.next match {
             case OfKind(BAD) => readToken() // Skip bad tokens
             case goodToken   => Some(goodToken)
@@ -75,7 +75,7 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
           ctx.reporter.error(s"Expected ${expected mkString " or "}, but reached end of input.")
           None
         } flatMap { token =>
-          if(expected contains token.kind) {
+          if (expected contains token.kind) {
             discardToken()
             thenn(token)
           } else {
@@ -155,7 +155,7 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
       }
 
     def parseStatements(): List[Statement] =
-      if(tokens.hasNext) {
+      if (tokens.hasNext) {
         val stmt = parseStatement()
         stmt ++: parseStatements()
       } else Nil
@@ -173,7 +173,7 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
       defaultDelay = parseDefaultDelay(),
       statements   = parseStatements()
     )
-    if(ctx.reporter.hasErrors) {
+    if (ctx.reporter.hasErrors) {
       throw new RuntimeException("DuckyScript syntax error(s) in Parser")
     } else {
       result

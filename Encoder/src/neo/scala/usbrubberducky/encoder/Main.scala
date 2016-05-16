@@ -77,9 +77,9 @@ object Main {
           )
       )
 
-      if(! remaining.isEmpty) {
+      if (! remaining.isEmpty) {
           err(
-              s"Unknown or malformed command line option${if(remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
+              s"Unknown or malformed command line option${if (remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
           )
           sys.exit(ExitCodes.BadCommandlineArguments)
       }
@@ -106,7 +106,7 @@ object Main {
     })
 
   private def runEncoder(inputs: Inputs): Int = {
-    val pipeline: Pipeline[Source, Try[Any]] = if(inputs.settings.prettyPrint) {
+    val pipeline: Pipeline[Source, Try[Any]] = if (inputs.settings.prettyPrint) {
         Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
       } else {
         Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
@@ -127,7 +127,7 @@ object Main {
   def main(args: Array[String]) {
     val settings = processArguments(args)
 
-    if(settings.help) {
+    if (settings.help) {
         printUsage()
         sys.exit(ExitCodes.Success)
     }

@@ -36,12 +36,12 @@ class Reporter(
         None
       }
 
-  def debug(message: Any, pos: Option[Position]): Unit = if(debug) { report("DEBUG: ", message, pos) }
-  def info(message: Any, pos: Option[Position]): Unit  = if(info)  { report("INFO: ", message, pos) }
-  def warn(message: Any, pos: Option[Position]): Unit  = if(warn)  { report("WARN: ", message, pos) }
+  def debug(message: Any, pos: Option[Position]): Unit = if (debug) { report("DEBUG: ", message, pos) }
+  def info(message: Any, pos: Option[Position]): Unit  = if (info)  { report("INFO: ", message, pos) }
+  def warn(message: Any, pos: Option[Position]): Unit  = if (warn)  { report("WARN: ", message, pos) }
   def error(message: Any, pos: Option[Position]): Unit = {
     _hasErrors = true
-    if(error) {
+    if (error) {
       report("ERROR: ", message, pos)
     }
   }

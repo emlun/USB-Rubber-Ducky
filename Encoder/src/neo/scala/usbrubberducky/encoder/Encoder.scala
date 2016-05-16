@@ -41,12 +41,12 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
 
     // Original Author:Jason Appelbaum Jason@Hak5.org
     def codeToBytes(str: String): List[Byte] = {
-      if(ctx.layout.getProperty(str) != null) {
+      if (ctx.layout.getProperty(str) != null) {
         val keys: List[String] = (ctx.layout.getProperty(str).split(",") map { _.trim }).toList
         keys map { key =>
-            if(ctx.keyboard.getProperty(key) != null) {
+            if (ctx.keyboard.getProperty(key) != null) {
               strToByte(ctx.keyboard.getProperty(key).trim())
-            } else if(ctx.layout.getProperty(key) != null) {
+            } else if (ctx.layout.getProperty(key) != null) {
               strToByte(ctx.layout.getProperty(key).trim())
             } else {
               println("Key not found: " + key)
@@ -68,7 +68,7 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
     def strInstrToByte(instruction: String): Byte = {
       val recurse: (String => Byte) = strInstrToByte _
 
-      if(ctx.keyboard.getProperty("KEY_" + instruction) != null) {
+      if (ctx.keyboard.getProperty("KEY_" + instruction) != null) {
         strToByte(ctx.keyboard.getProperty("KEY_" + instruction))
       } else instruction match {
         case "ESCAPE"         => recurse("ESC")
@@ -119,7 +119,7 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
         case TypeString(StringLit(value, _), _) =>
           value.flatMap({ c: Char =>
             val bytes = charToBytes(c)
-            bytes ++: (if(bytes.length % 2 == 0) Nil else List(0x00: Byte))
+            bytes ++: (if (bytes.length % 2 == 0) Nil else List(0x00: Byte))
           })
 
         case Ctrl(None, _, _)                              => encodeModifierKeypress("KEY_LEFT_CTRL")
@@ -187,7 +187,7 @@ object NewEncoder extends Pipeline[Script, List[Byte]] {
        */
       statementBytes ++: delayBytes ++:
         List.fill(statement.times.value - 1)(statementBytes).flatten ++:
-        (if(statement.times.value > 1) delayBytes else Nil)
+        (if (statement.times.value > 1) delayBytes else Nil)
     }
 
     val bytes: List[Byte] = script.statements flatMap encodeStatement _
