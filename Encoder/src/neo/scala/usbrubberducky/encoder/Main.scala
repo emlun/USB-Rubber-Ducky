@@ -67,106 +67,104 @@ object Main {
   private case class Inputs(settings: Settings, input: InputFile, layout: Properties, keyboard: Properties)
 
   private def processArguments(args: Array[String]): Settings = {
-      val (options, remaining) = OptionParser.getOptions(args,
-          Map(
-              "-h|--help" -> 'help,
-              "-i|--infile=s" -> 'infileName,
-              "-l|--layout=s" -> 'layoutName,
-              "-o|--outfile=s" -> 'outfileName,
-              "--pretty" -> 'prettyPrint
-          )
+    val (options, remaining) = OptionParser.getOptions(
+      args,
+      Map(
+        "-h|--help" -> 'help,
+        "-i|--infile=s" -> 'infileName,
+        "-l|--layout=s" -> 'layoutName,
+        "-o|--outfile=s" -> 'outfileName,
+        "--pretty" -> 'prettyPrint
       )
+    )
 
-      if (! remaining.isEmpty) {
-          err(
-              s"Unknown or malformed command line option${if (remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
-          )
-          sys.exit(ExitCodes.BadCommandlineArguments)
-      }
-
-      Settings(
-          help = options contains 'help,
-          infile = options.get('infileName) map { _.asInstanceOf[String] },
-          layout = options.get('layoutName) map { _.asInstanceOf[String] } getOrElse "us",
-          outfile = options.get('outfileName) map { _.asInstanceOf[String] },
-          prettyPrint = options contains 'prettyPrint
+    if (! remaining.isEmpty) {
+      err(
+        s"Unknown or malformed command line option${if (remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
       )
+      sys.exit(ExitCodes.BadCommandlineArguments)
+    }
+
+    Settings(
+      help = options contains 'help,
+      infile = options.get('infileName) map { _.asInstanceOf[String] },
+      layout = options.get('layoutName) map { _.asInstanceOf[String] } getOrElse "us",
+      outfile = options.get('outfileName) map { _.asInstanceOf[String] },
+      prettyPrint = options contains 'prettyPrint
+    )
   }
 
-  private def printUsage() = println(
-          """Usage: TODO"""
-      )
+  private def printUsage() = println("""Usage: TODO""")
 
   private def err(message: String): Unit = Console.err.println("ERROR: " + message)
 
-  private def loadProperties(resourceName: String): Try[Properties] = Try({
-      val result = new Properties()
-      result.load(getClass().getResourceAsStream(resourceName))
-      result
-    })
+  private def loadProperties(resourceName: String): Try[Properties] = Try {
+    val result = new Properties()
+    result.load(getClass().getResourceAsStream(resourceName))
+    result
+  }
 
   private def runEncoder(inputs: Inputs): Int = {
     val pipeline: Pipeline[Source, Try[Any]] = if (inputs.settings.prettyPrint) {
-        Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
-      } else {
-        Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
-          override def run(ctx: Context)(bytes: List[Byte]): Unit = {
-            bytes foreach { byte: Byte => Console.out.write(byte) }
-            Console.out.flush()
-          }
+      Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
+    } else {
+      Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
+        override def run(ctx: Context)(bytes: List[Byte]): Unit = {
+          bytes foreach { byte: Byte => Console.out.write(byte) }
+          Console.out.flush()
         }
       }
-
-      val context = new Context(inputs.keyboard, inputs.layout, inputFileName = Some(inputs.input.fileName))
-      pipeline.run(context)(inputs.input.source) match {
-        case Success(_) => ExitCodes.Success
-        case Failure(_) => ExitCodes.Failure
-      }
     }
+
+    val context = new Context(inputs.keyboard, inputs.layout, inputFileName = Some(inputs.input.fileName))
+    pipeline.run(context)(inputs.input.source) match {
+      case Success(_) => ExitCodes.Success
+      case Failure(_) => ExitCodes.Failure
+    }
+  }
 
   def main(args: Array[String]) {
     val settings = processArguments(args)
 
     if (settings.help) {
-        printUsage()
-        sys.exit(ExitCodes.Success)
+      printUsage()
+      sys.exit(ExitCodes.Success)
     }
 
-    val inputFile = Try(settings.infile match {
-          case Some(fileName) => InputFile(fileName, Source fromFile fileName)
-          case None           => InputFile("STDIN",  Source.stdin)
-        }) recover {
-          case _: FileNotFoundException => {
-            err(s"File not found: ${settings.infile}")
-            sys.exit(ExitCodes.InputFileFailed)
-          }
-          case _ => {
-            err(s"Failed to open input file: ${settings.infile}")
-            sys.exit(ExitCodes.InputFileFailed)
-          }
-        }
+    val inputFile = Try {
+      settings.infile match {
+        case Some(fileName) => InputFile(fileName, Source fromFile fileName)
+        case None           => InputFile("STDIN",  Source.stdin)
+      }
+    } recover {
+      case _: FileNotFoundException =>
+        err(s"File not found: ${settings.infile}")
+        sys.exit(ExitCodes.InputFileFailed)
+
+      case _ =>
+        err(s"Failed to open input file: ${settings.infile}")
+        sys.exit(ExitCodes.InputFileFailed)
+    }
 
     val layout = loadProperties(settings.layout + ".properties") recover {
-        case _: NullPointerException => {
-          err(s"Unknown layout: ${settings.layout}")
-          sys.exit(ExitCodes.InvalidLayout)
-        }
-        case error: IOException => {
-          err(s"Failed to load layout definition: ${settings.layout} ($error)")
-          sys.exit(ExitCodes.LayoutFailed)
-        }
-        case error: IllegalArgumentException => {
-          err(s"""Corrupted layout definition "${settings.layout}" - please file a bug report. ($error)""")
-          sys.exit(ExitCodes.LayoutFailed)
-        }
-      }
+      case _: NullPointerException =>
+        err(s"Unknown layout: ${settings.layout}")
+        sys.exit(ExitCodes.InvalidLayout)
+
+      case error: IOException =>
+        err(s"Failed to load layout definition: ${settings.layout} ($error)")
+        sys.exit(ExitCodes.LayoutFailed)
+
+      case error: IllegalArgumentException =>
+        err(s"""Corrupted layout definition "${settings.layout}" - please file a bug report. ($error)""")
+        sys.exit(ExitCodes.LayoutFailed)
+    }
 
     val keyboard = loadProperties("keyboard.properties") recover {
-        case error => {
-          err(s"Failed to load keycode mapping - please file a bug report. ($error)")
-          sys.exit(ExitCodes.KeyboardFailed)
-        }
-      }
+      case error =>
+        err(s"Failed to load keycode mapping - please file a bug report. ($error)")
+        sys.exit(ExitCodes.KeyboardFailed)
+    }
 
     val exitCode = (inputFile, layout, keyboard) match {
       case (Success(inputFile), Success(layout), Success(keyboard)) =>
