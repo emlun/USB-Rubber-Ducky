@@ -81,43 +81,35 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
       }
 
     def eatIntLit[T](andThen: (IntLit => T)): Option[T] =
-      eat(INTLITKIND) { token =>
-        token match {
-          case intLit: IntLit => Some(andThen(intLit))
-          case _ =>
-            ctx.reporter.error(s"Expected integer literal, got ${token.kind}", token.pos)
-            discardToken()
-            None
-        }
+      eat(INTLITKIND) {
+        case intLit: IntLit => Some(andThen(intLit))
+        case token =>
+          ctx.reporter.error(s"Expected integer literal, got ${token.kind}", token.pos)
+          discardToken()
+          None
       }
 
     def eatPosIntLit[T](andThen: (PosIntLit => T)): Option[T] =
-      eat(POSINTLITKIND) { token =>
-        token match {
-          case intLit: PosIntLit => Some(andThen(intLit))
-          case _ =>
-            ctx.reporter.error(s"Expected positive integer literal, got ${token.kind}", token.pos)
-            discardToken()
-            None
-        }
+      eat(POSINTLITKIND) {
+        case intLit: PosIntLit => Some(andThen(intLit))
+        case token =>
+          ctx.reporter.error(s"Expected positive integer literal, got ${token.kind}", token.pos)
+          discardToken()
+          None
       }
 
     def eatStringLit[T](andThen: (StringLit => T)): Option[T] =
-      eat(STRLITKIND) { token =>
-        token match {
-          case stringLit: StringLit => Some(andThen(stringLit))
-          case _ =>
-            ctx.reporter.error(s"Expected string literal, got ${token.kind}", token.pos)
-            None
-        }
+      eat(STRLITKIND) {
+        case stringLit: StringLit => Some(andThen(stringLit))
+        case token =>
+          ctx.reporter.error(s"Expected string literal, got ${token.kind}", token.pos)
+          None
       }
 
     def maybeEatKeyName(): Option[KeyName] =
-      eat(KEYNAMEKIND, NEWLINE) { maybeKeyName =>
-        maybeKeyName match {
-          case keyName: KeyName => Some(keyName)
-          case _                => None
-        }
+      eat(KEYNAMEKIND, NEWLINE) {
+        case keyName: KeyName => Some(keyName)
+        case _                => None
       }
 
     def maybeEatRepeat(): PosIntLit =
