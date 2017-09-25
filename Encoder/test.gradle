@@ -1,36 +1,46 @@
 Task makeEncodeTask(File inputFile, File outputFile) {
-  task("encode_${inputFile}_As_${outputFile}", type: JavaExec, dependsOn: jar) {
-    inputs.file jar.archivePath
-    inputs.file inputFile
-    outputs.file outputFile
+  def taskName = "encode_${inputFile.absolutePath.replaceAll('/', '_')}_As_${outputFile.absolutePath.replaceAll('/', '_')}"
 
-    main '-jar'
-    args jar.archivePath
-    args '-i', inputFile.path
-    args '-o', outputFile.path
-    standardOutput = new ByteArrayOutputStream()
-  } doFirst {
-    outputFile.parentFile.mkdirs()
+  if (project.tasks.findByName(taskName)) {
+    return project.tasks[taskName]
+  } else {
+    return task(taskName, type: JavaExec, dependsOn: jar) {
+      inputs.file jar.archivePath
+      inputs.file inputFile
+      outputs.file outputFile
+
+      main '-jar'
+      args jar.archivePath
+      args '-i', inputFile.path
+      args '-o', outputFile.path
+      standardOutput = new ByteArrayOutputStream()
+
+      doFirst {
+        outputFile.parentFile.mkdirs()
+      }
+    }
   }
 }
 
 Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
-  def testOutputFile = file("${buildDir}/tmp/${inputFile.name.replace('.ducky', '')}.bin")
+  def testOutputFile = file("${buildDir}/tmp/test-output-binaries/${inputFile.name.replace('.ducky', '')}.bin")
 
   def encodeTask = makeEncodeTask(inputFile, testOutputFile)
-  return task("checkOutput_${inputFile.name}", dependsOn: encodeTask) {
-    inputs.files testOutputFile, expectedOutputFile
+  return task("checkOutput_${inputFile.name.replaceAll('/', '_')}") {
+    inputs.files encodeTask.outputs.files
+    inputs.files expectedOutputFile
     outputs.upToDateWhen { !encodeTask.didWork }
-  } << {
-    byte[] expectedOutput = expectedOutputFile.bytes
-    byte[] actualOutput = testOutputFile.bytes
+    doFirst {
+      byte[] expectedOutput = expectedOutputFile.bytes
+      byte[] actualOutput = testOutputFile.bytes
 
-    assert actualOutput.length == expectedOutput.length,
-      "Wrong file length (expected = ${expectedOutput.length}, actual = ${actualOutput.length}"
+      assert actualOutput.length == expectedOutput.length,
+        "Wrong file length (expected = ${expectedOutput.length}, actual = ${actualOutput.length}"
 
-    for(int i = 0; i < expectedOutput.length; ++i) {
-      assert actualOutput[i] == expectedOutput[i],
-        "Wrong output byte at index $i (expected = ${expectedOutput[i]}, actual = ${actualOutput[i]})"
+      for(int i = 0; i < expectedOutput.length; ++i) {
+        assert actualOutput[i] == expectedOutput[i],
+          "Wrong output byte at index $i (expected = ${expectedOutput[i]}, actual = ${actualOutput[i]})"
+      }
     }
   }
 }
