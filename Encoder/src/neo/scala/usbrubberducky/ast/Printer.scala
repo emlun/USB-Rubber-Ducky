@@ -51,7 +51,3 @@ object Printer {
     } mkString "\n")
 
 }
-
-object PrettyPrinter extends Pipeline[Script, String]() {
-  override def run(ctx: Context)(script: Script) = Printer.prettyPrint(script)
-}
