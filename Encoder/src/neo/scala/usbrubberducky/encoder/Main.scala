@@ -37,7 +37,8 @@ object Main extends App {
     prettyPrint: Boolean = false
   )
 
-  private def processArguments(args: List[String], settings: Settings): Either[String, Settings] = args match {
+  private def processArguments(args: List[String], settings: Settings): Either[String, Settings] =
+    args match {
       case Nil                     => Right(settings)
       case "-i" :: infile  :: tail => processArguments(tail, settings.copy(infile  = Some(infile)))
       case "-o" :: outfile :: tail => processArguments(tail, settings.copy(outfile = Some(outfile)))
