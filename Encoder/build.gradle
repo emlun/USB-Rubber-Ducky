@@ -42,6 +42,11 @@ dependencies {
     'org.scala-lang:scala-parser-combinators:+',
     project(':scala-getoptions'),
   )
+
+  neoRuntime(
+    'org.slf4j:slf4j-simple:1.7.+',
+  )
+
   testCompile(
     sourceSets.neo.output,
     'org.scalatest:scalatest_2.11:2.+',
