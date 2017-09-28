@@ -37,6 +37,10 @@ configurations {
 }
 
 dependencies {
+  compile(
+    'org.scala-lang:scala-library:2.11+',
+  )
+
   neoCompile(
     'org.scala-lang:scala-library:2.11+',
     'org.scala-lang:scala-parser-combinators:+',
