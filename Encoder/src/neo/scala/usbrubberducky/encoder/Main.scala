@@ -18,25 +18,24 @@ package usbrubberducky
 package encoder
 
 import java.io.FileNotFoundException
-import java.io.InputStream
 import java.io.IOException
+import java.io.File
+import java.io.PrintStream
+import java.io.FileOutputStream
 import java.util.Properties
+
+import com.gambaeng.utils.OptionParser
+import usbrubberducky.ast.PrettyPrinter
+import usbrubberducky.lang.Lexer
+import usbrubberducky.lang.Parser
+import usbrubberducky.util.Context
+import usbrubberducky.util.Pipeline
+import usbrubberducky.util.StdoutPrinter
 
 import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
-import ast.Trees.Script
-import ast.PrettyPrinter
-
-import lang.{Lexer,Parser}
-import util.Context
-import util.Pipeline
-import util.Reporter
-import util.StdoutPrinter
-
-import com.gambaeng.utils.OptionParser
 
 object Main {
 
@@ -104,14 +103,19 @@ object Main {
     result
   }
 
-  private def runEncoder(inputs: Inputs): Int = {
+  private def runEncoder(inputs: Inputs, settings: Settings): Int = {
     val pipeline: Pipeline[Source, Try[Any]] = if (inputs.settings.prettyPrint) {
       Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
     } else {
       Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
         override def run(ctx: Context)(bytes: List[Byte]): Unit = {
-          bytes foreach { byte: Byte => Console.out.write(byte) }
-          Console.out.flush()
+          val out: PrintStream = settings.outfile match {
+            case Some(outFile) => new PrintStream(new FileOutputStream(new File(outFile)))
+            case None => Console.out
+          }
+
+          bytes foreach { byte: Byte => out.write(byte) }
+          out.flush()
         }
       }
     }
@@ -168,7 +172,7 @@ object Main {
 
     val exitCode = (inputFile, layout, keyboard) match {
       case (Success(inputFile), Success(layout), Success(keyboard)) =>
-        runEncoder(Inputs(settings, inputFile, layout, keyboard))
+        runEncoder(Inputs(settings, inputFile, layout, keyboard), settings)
       case _ => ExitCodes.Failure
     }
 
