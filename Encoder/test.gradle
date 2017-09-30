@@ -1,16 +1,16 @@
-Task makeEncodeTask(File inputFile, File outputFile) {
+Task makeEncodeTask(Jar jarTask, File inputFile, File outputFile) {
   def taskName = "encode_${inputFile.absolutePath.replaceAll('/', '_')}_As_${outputFile.absolutePath.replaceAll('/', '_')}"
 
   if (project.tasks.findByName(taskName)) {
     return project.tasks[taskName]
   } else {
-    return task(taskName, type: JavaExec, dependsOn: jar) {
-      inputs.file jar.archivePath
+    return task(taskName, type: JavaExec, dependsOn: jarTask) {
+      inputs.file jarTask.archivePath
       inputs.file inputFile
       outputs.file outputFile
 
       main '-jar'
-      args jar.archivePath
+      args jarTask.archivePath
       args '-i', inputFile.path
       args '-o', outputFile.path
       standardOutput = new ByteArrayOutputStream()
@@ -25,7 +25,7 @@ Task makeEncodeTask(File inputFile, File outputFile) {
 Task makeCheckOutputTask(File inputFile, File expectedOutputFile) {
   def testOutputFile = file("${buildDir}/tmp/test-output-binaries/${inputFile.name.replace('.ducky', '')}.bin")
 
-  def encodeTask = makeEncodeTask(inputFile, testOutputFile)
+  def encodeTask = makeEncodeTask(neoJar, inputFile, testOutputFile)
   return task("checkOutput_${inputFile.name.replaceAll('/', '_')}") {
     inputs.files encodeTask.outputs.files
     inputs.files expectedOutputFile
@@ -55,7 +55,7 @@ fileTree('src/test/resources/') {
 }.visit { f ->
   if(!f.isDirectory()) {
     def outputFile = file("src/test/outputs/${f.name.replace('.ducky', '')}.bin")
-    makeOutputDumps.dependsOn makeEncodeTask(f.file, outputFile)
+    makeOutputDumps.dependsOn makeEncodeTask(jar, f.file, outputFile)
 
     testOutputs.dependsOn makeCheckOutputTask(f.file, outputFile)
   }
