@@ -4,6 +4,8 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'scala'
 
+String neoVersion = "1.0.1"
+
 task wrapper(type: Wrapper) {
   gradleVersion = '4.2'
 }
@@ -57,12 +59,19 @@ jar {
 task neoJar(type: Jar, dependsOn: neoClasses) {
   from sourceSets.neo.output
 
+  version = neoVersion
+
   configurations.neoRuntime.files.each {
     from zipTree(it)
   }
 
-  archiveName = 'new-encoder.jar'
-  manifest.from 'src/neo/resources/META-INF/MANIFEST.MF'
+  baseName = 'new-encoder'
+  manifest {
+    from 'src/neo/resources/META-INF/MANIFEST.MF'
+    attributes([
+      'Implementation-Version': neoVersion,
+    ])
+  }
 }
 
 apply from: 'test.gradle'

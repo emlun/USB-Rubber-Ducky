@@ -2,5 +2,4 @@ Manifest-Version: 1.0
 Sealed: true
 Main-Class: usbrubberducky.encoder.Main
 Implementation-Title: USB Rubber Ducky Neo Encoder
-Implementation-Version: 1.0.0
 Implementation-Vendor: Emil Lundberg <emil@emlun.se>
