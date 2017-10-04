@@ -74,7 +74,7 @@ object Parser extends TryPipeline[Iterator[Token], Script] {
           discardToken()
           thenn(token)
         } else {
-          ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}")
+          ctx.reporter.error(s"Expected ${expected mkString " or "}, got ${token.kind}", token.pos)
           discardToken()
           None
         }
