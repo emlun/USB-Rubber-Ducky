@@ -1,16 +1,68 @@
+plugins {
+  id "com.github.maiflai.scalatest" version "0.16"
+}
 apply plugin: 'java'
+apply plugin: 'scala'
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.4'
+  gradleVersion = '4.2'
 }
 
-sourceSets.main.java.exclude 'usbrubberducky/encoder/Encoder_GUI.java'
+sourceSets {
+  main.java.exclude 'usbrubberducky/encoder/Encoder_GUI.java'
+  neo {
+    resources.srcDir 'src/main/resources'
+  }
+}
+
+allprojects {
+  repositories { mavenCentral() }
+}
+
+configurations {
+  testRuntime { extendsFrom neoRuntime }
+}
+
+dependencies {
+  compile(
+    'org.scala-lang:scala-library:2.11+',
+  )
+
+  neoCompile(
+    'commons-cli:commons-cli:1.4',
+    'org.scala-lang:scala-library:2.11+',
+    'org.scala-lang:scala-parser-combinators:+',
+  )
+
+  neoRuntime(
+    'org.slf4j:slf4j-simple:1.7.+',
+  )
+
+  testCompile(
+    sourceSets.neo.output,
+    'org.scalatest:scalatest_2.11:2.+',
+    'org.scalamock:scalamock-core_2.11:3.+',
+    'org.scalamock:scalamock-scalatest-support_2.11:3.+',
+  )
+  testRuntime 'org.pegdown:pegdown:1.+'
+}
 
 jar {
   archiveName = 'encoder.jar'
   manifest {
     from 'src/main/resources/META-INF/MANIFEST.MF'
   }
+}
+
+task neoJar(type: Jar, dependsOn: neoClasses) {
+  from sourceSets.neo.output
+
+  configurations.neoRuntime.files.each {
+    from zipTree(it)
+  }
+
+  archiveName = 'new-encoder.jar'
+  manifest.from 'src/neo/resources/META-INF/MANIFEST.MF'
 }
 
 apply from: 'test.gradle'

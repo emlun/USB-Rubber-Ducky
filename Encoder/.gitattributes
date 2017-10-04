@@ -3,6 +3,7 @@
 *.gradle text
 *.java text
 *.properties text
+*.scala text
 
 gradlew text eol=lf
 *.bat text eol=crlf
