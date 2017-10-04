@@ -22,6 +22,7 @@ import java.io.IOException
 import java.io.File
 import java.io.PrintStream
 import java.io.FileOutputStream
+import java.io.FileInputStream
 import java.util.Properties
 
 import org.apache.commons.cli
@@ -76,7 +77,7 @@ object Main {
     val help: cli.Option = cli.Option.builder("h").longOpt("help").desc("Show this help and exit").build()
     val infile: cli.Option = cli.Option.builder("i").longOpt("infile").desc("DuckyScript file to encode (default: stdin)")
       .hasArg(true).argName("file").optionalArg(false).build()
-    val layout: cli.Option = cli.Option.builder("l").longOpt("layout").desc("Keyboard layout name (default: us)")
+    val layout: cli.Option = cli.Option.builder("l").longOpt("layout").desc("Keyboard layout name or path to .properties file (default: us)")
       .hasArg(true).argName("file").optionalArg(false).build()
     val outfile: cli.Option = cli.Option.builder("o").longOpt("outfile").desc("File to write binary output to (default: stdout)")
       .hasArg(true).argName("file").optionalArg(false).build()
@@ -158,6 +159,12 @@ object Main {
     result
   }
 
+  private def loadExternalProperties(fileName: String): Try[Properties] = Try {
+    val result = new Properties()
+    result.load(new FileInputStream(fileName))
+    result
+  }
+
   private def runEncoder(inputs: Inputs, settings: Settings): Int = {
     val pipeline: Pipeline[Source, Try[Any]] = if (inputs.settings.prettyPrint) {
       Lexer andThen Parser andThen PrettyPrinter andThen StdoutPrinter
@@ -203,7 +210,10 @@ object Main {
           sys.exit(ExitCodes.InputFileFailed)
       }
 
-      val layout = loadProperties(settings.layout + ".properties") recover {
+      val layout = loadProperties(settings.layout + ".properties") recoverWith {
+        case _: NullPointerException =>
+          loadExternalProperties(settings.layout)
+      } recover {
         case _: NullPointerException =>
           err(s"Unknown layout: ${settings.layout}")
           sys.exit(ExitCodes.InvalidLayout)
