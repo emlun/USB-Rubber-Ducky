@@ -24,7 +24,10 @@ import java.io.PrintStream
 import java.io.FileOutputStream
 import java.util.Properties
 
-import com.gambaeng.utils.OptionParser
+import org.apache.commons.cli
+import org.apache.commons.cli.Options
+import org.apache.commons.cli.DefaultParser
+import org.apache.commons.cli.CommandLine
 import usbrubberducky.ast.PrettyPrinter
 import usbrubberducky.lang.Lexer
 import usbrubberducky.lang.Parser
@@ -32,12 +35,15 @@ import usbrubberducky.util.Context
 import usbrubberducky.util.Pipeline
 import usbrubberducky.util.StdoutPrinter
 
+import scala.collection.JavaConverters._
 import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+
 object Main {
+  val progname = "java -jar new-encoder.jar"
 
   /**
     * 0-9 range: General
@@ -65,35 +71,84 @@ object Main {
   private case class InputFile(fileName: String, source: Source)
   private case class Inputs(settings: Settings, input: InputFile, layout: Properties, keyboard: Properties)
 
-  private def processArguments(args: Array[String]): Settings = {
-    val (options, remaining) = OptionParser.getOptions(
-      args,
-      Map(
-        "-h|--help" -> 'help,
-        "-i|--infile=s" -> 'infileName,
-        "-l|--layout=s" -> 'layoutName,
-        "-o|--outfile=s" -> 'outfileName,
-        "--pretty" -> 'prettyPrint
-      )
-    )
 
-    if (! remaining.isEmpty) {
-      err(
-        s"Unknown or malformed command line option${if (remaining.size > 1) "s" else ""}: ${remaining mkString ""}"
-      )
-      sys.exit(ExitCodes.BadCommandlineArguments)
-    }
+  private object Options {
+    val help: cli.Option = cli.Option.builder("h").longOpt("help").desc("Show this help and exit").build()
+    val infile: cli.Option = cli.Option.builder("i").longOpt("infile").desc("DuckyScript file to encode (default: stdin)")
+      .hasArg(true).argName("file").optionalArg(false).build()
+    val layout: cli.Option = cli.Option.builder("l").longOpt("layout").desc("Keyboard layout name (default: us)")
+      .hasArg(true).argName("file").optionalArg(false).build()
+    val outfile: cli.Option = cli.Option.builder("o").longOpt("outfile").desc("File to write binary output to (default: stdout)")
+      .hasArg(true).argName("file").optionalArg(false).build()
+    val pretty: cli.Option = cli.Option.builder(null).longOpt("pretty").desc("Pretty-print DuckyScript to stdout instead of writing binary file (overrides --outfile)").build()
 
-    Settings(
-      help = options contains 'help,
-      infile = options.get('infileName) map { _.asInstanceOf[String] },
-      layout = options.get('layoutName) map { _.asInstanceOf[String] } getOrElse "us",
-      outfile = options.get('outfileName) map { _.asInstanceOf[String] },
-      prettyPrint = options contains 'prettyPrint
-    )
+    val Options = new Options()
+      .addOption(help)
+      .addOption(infile)
+      .addOption(layout)
+      .addOption(outfile)
+      .addOption(pretty)
   }
 
-  private def printUsage() = println("""Usage: TODO""")
+  private def processArguments(args: Array[String]): Try[Settings] = {
+    Try (new DefaultParser().parse(Options.Options, args)) map { cmd =>
+      if (cmd.getArgs.isEmpty == false) {
+        err(
+          s"Unknown or malformed command line option${if (cmd.getArgs.size > 1) "s" else ""}: ${cmd.getArgs mkString " "}"
+        )
+        sys.exit(ExitCodes.BadCommandlineArguments)
+      }
+
+      Settings(
+        help = cmd hasOption Options.help.getOpt,
+        infile = Option(cmd.getOptionValue(Options.infile.getOpt)),
+        layout = Option(cmd.getOptionValue(Options.layout.getOpt)) getOrElse "us",
+        outfile = Option(cmd.getOptionValue(Options.outfile.getOpt)),
+        prettyPrint = cmd hasOption Options.pretty.getLongOpt
+      )
+    }
+  }
+
+  private def describeOptions(options: Seq[cli.Option], leftMargin: String = "  "): String = {
+    def getNames(opt: cli.Option): String = {
+      val name = (opt.getOpt, opt.getLongOpt) match {
+        case (short, null) => s"-${short}"
+        case (null, long) => s"    --${long}"
+        case (short, long) => s"-${short}, --${long}"
+      }
+
+      if (opt.hasArg)
+        if (opt.hasOptionalArg)
+          s"${name} [${opt.getArgName}]"
+        else
+          s"${name} ${opt.getArgName}"
+      else
+        name
+    }
+
+    val longestName: Int = options.map(getNames(_).length).max
+
+    options map { opt =>
+      val name = getNames(opt)
+      val paddingAmount: Int = longestName - name.length + 2
+      val padding = List.fill(paddingAmount)(' ') mkString ""
+
+      s"${leftMargin}${name}${padding}${opt.getDescription}"
+    } mkString "\n"
+  }
+
+  private def sortOptions(options: Iterable[cli.Option]): Seq[cli.Option] =
+    options.toList.sortBy { opt => Option(opt.getLongOpt) getOrElse opt.getOpt }
+
+
+  private def printUsage(): Unit = {
+    println(
+      s"""Usage: ${progname} <options>
+        |
+        |Options:
+        |${describeOptions(sortOptions(Options.Options.getOptions.asScala))}
+      """.stripMargin)
+  }
 
   private def err(message: String): Unit = Console.err.println("ERROR: " + message)
 
@@ -110,6 +165,7 @@ object Main {
       Lexer andThen Parser andThen NewEncoder andThen new Pipeline[List[Byte], Unit]() {
         override def run(ctx: Context)(bytes: List[Byte]): Unit = {
           val out: PrintStream = settings.outfile match {
+            case Some("-") => new PrintStream(System.out)
             case Some(outFile) => new PrintStream(new FileOutputStream(new File(outFile)))
             case None => Console.out
           }
@@ -127,55 +183,64 @@ object Main {
     }
   }
 
-  def main(args: Array[String]) {
-    val settings = processArguments(args)
-
+  def run(settings: Settings): Int = {
     if (settings.help) {
       printUsage()
-      sys.exit(ExitCodes.Success)
-    }
+      ExitCodes.Success
+    } else {
+      val inputFile = Try {
+        settings.infile match {
+          case Some(fileName) => InputFile(fileName, Source fromFile fileName)
+          case None => InputFile("STDIN", Source.stdin)
+        }
+      } recover {
+        case _: FileNotFoundException =>
+          err(s"File not found: ${settings.infile}")
+          sys.exit(ExitCodes.InputFileFailed)
 
-    val inputFile = Try {
-      settings.infile match {
-        case Some(fileName) => InputFile(fileName, Source fromFile fileName)
-        case None           => InputFile("STDIN",  Source.stdin)
+        case _ =>
+          err(s"Failed to open input file: ${settings.infile}")
+          sys.exit(ExitCodes.InputFileFailed)
       }
-    } recover {
-      case _: FileNotFoundException =>
-        err(s"File not found: ${settings.infile}")
-        sys.exit(ExitCodes.InputFileFailed)
 
-      case _ =>
-        err(s"Failed to open input file: ${settings.infile}")
-        sys.exit(ExitCodes.InputFileFailed)
+      val layout = loadProperties(settings.layout + ".properties") recover {
+        case _: NullPointerException =>
+          err(s"Unknown layout: ${settings.layout}")
+          sys.exit(ExitCodes.InvalidLayout)
+
+        case error: IOException =>
+          err(s"Failed to load layout definition: ${settings.layout} ($error)")
+          sys.exit(ExitCodes.LayoutFailed)
+
+        case error: IllegalArgumentException =>
+          err(s"""Corrupted layout definition "${settings.layout}" - please file a bug report. ($error)""")
+          sys.exit(ExitCodes.LayoutFailed)
+      }
+
+      val keyboard = loadProperties("keyboard.properties") recover {
+        case error =>
+          err(s"Failed to load keycode mapping - please file a bug report. ($error)")
+          sys.exit(ExitCodes.KeyboardFailed)
+      }
+
+      (inputFile, layout, keyboard) match {
+        case (Success(inputFile), Success(layout), Success(keyboard)) =>
+          runEncoder(Inputs(settings, inputFile, layout, keyboard), settings)
+        case _ => ExitCodes.Failure
+      }
     }
+  }
 
-    val layout = loadProperties(settings.layout + ".properties") recover {
-      case _: NullPointerException =>
-        err(s"Unknown layout: ${settings.layout}")
-        sys.exit(ExitCodes.InvalidLayout)
-
-      case error: IOException =>
-        err(s"Failed to load layout definition: ${settings.layout} ($error)")
-        sys.exit(ExitCodes.LayoutFailed)
-
-      case error: IllegalArgumentException =>
-        err(s"""Corrupted layout definition "${settings.layout}" - please file a bug report. ($error)""")
-        sys.exit(ExitCodes.LayoutFailed)
+  def main(args: Array[String]) {
+    val exitCode = processArguments(args) match {
+      case Success(settings) => run(settings)
+      case Failure(e) => {
+        println("Error: " + e.getMessage)
+        println()
+        printUsage()
+        ExitCodes.BadCommandlineArguments
+      }
     }
-
-    val keyboard = loadProperties("keyboard.properties") recover {
-      case error =>
-        err(s"Failed to load keycode mapping - please file a bug report. ($error)")
-        sys.exit(ExitCodes.KeyboardFailed)
-    }
-
-    val exitCode = (inputFile, layout, keyboard) match {
-      case (Success(inputFile), Success(layout), Success(keyboard)) =>
-        runEncoder(Inputs(settings, inputFile, layout, keyboard), settings)
-      case _ => ExitCodes.Failure
-    }
-
     sys.exit(exitCode)
   }
 }
